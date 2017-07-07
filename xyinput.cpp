@@ -55,7 +55,7 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
                 break;
             }
         }
-        else if (keyEvent->key() != Qt::Key_unknown)
+        else if (keyEvent->key() != Qt::Key_unknown && keyEvent->modifiers() == Qt::NoModifier)
         {
             mopLatestWidget = static_cast<QWidget *>(obj);
             qDebug("Ate key press %d", keyEvent->key());
