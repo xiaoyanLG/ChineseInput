@@ -4,6 +4,9 @@
 #include <QEvent>
 #include <QKeyEvent>
 #include <QApplication>
+#include <QAbstractItemView>
+#include <QListView>
+#include <Windows.h>
 #include <QDebug>
 
 XYInput *XYInput::mopInstance;
@@ -17,17 +20,19 @@ XYInput *XYInput::getInstance()
 }
 
 XYInput::XYInput(QWidget *parent)
-    : XYMovableWidget(parent)
+    : XYBorderShadowWidget(parent)
 {
-    this->setWindowFlags(Qt::FramelessWindowHint
-                         | Qt::WindowStaysOnTopHint
-                         | Qt::WindowType_Mask);
+    setWindowFlags(Qt::FramelessWindowHint
+                   | Qt::WindowStaysOnTopHint
+                   | Qt::Tool
+                   | Qt::WindowDoesNotAcceptFocus);
     this->setAttribute(Qt::WA_TranslucentBackground);
     QHBoxLayout *layout = new QHBoxLayout;
-    layout->setContentsMargins(QMargins(15, 15, 20, 15));
+    layout->setContentsMargins(QMargins(13, 13, 20, 13));
     mopLineEdit = new QLineEdit;
     mopLineEdit->installEventFilter(this);
     layout->addWidget(mopLineEdit);
+    connect(mopLineEdit, SIGNAL(textEdited(const QString &)), this, SLOT(mslotFindTranslate(const QString &)));
 
     setLayout(layout);
 }
@@ -58,11 +63,13 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
         else if (keyEvent->key() != Qt::Key_unknown && keyEvent->modifiers() == Qt::NoModifier)
         {
             mopLatestWidget = static_cast<QWidget *>(obj);
-            qDebug("Ate key press %d", keyEvent->key());
             XYInput *input = XYInput::getInstance();
-            input->mopLineEdit->clear();
-            input->move(QCursor::pos());
-            input->show();
+            if (!input->isVisible())
+            {
+                input->mopLineEdit->clear();
+                input->move(QCursor::pos());
+                input->show();
+            }
 
             qApp->postEvent(input->mopLineEdit, new QKeyEvent(QEvent::KeyPress, keyEvent->key(), Qt::NoModifier, keyEvent->text()));
             return true;
@@ -70,14 +77,30 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
     }
     else if (QEvent::InputMethod == event->type())
     {
+        // 这里是输入法传入的信号，不过，我们可以不用
         QInputMethodEvent *me = static_cast<QInputMethodEvent *>(event);
-//        qDebug() << me->attributes().size();
-        for (int i = 0; i < me->attributes().size(); ++i)
+        if (me->attributes().size() == 1 && me->attributes().at(0).type == 1)
         {
-            qDebug() << me->attributes().at(i).type;
+            qDebug("Text: %s", me->commitString().toUtf8().data());
         }
-        qDebug("Text: %s", me->commitString().toUtf8().data());
+        // 如果想屏蔽，直接返回true
+//        return true;
+    }
+    else if (QEvent::FocusOut == event->type())
+    {
+        XYInput *input = XYInput::getInstance();
+        input->close();
     }
     return QWidget::eventFilter(obj, event);
+}
+
+void XYInput::mslotFindTranslate(const QString &keyword)
+{
+    load();
+}
+
+void XYInput::load()
+{
+
 }
 

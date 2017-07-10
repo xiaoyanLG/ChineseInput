@@ -3,9 +3,10 @@
 
 #include "xymovablewidget.h"
 #include "xybordershadowwidget.h"
+#include "xytranslatelistmodel.h"
 
 class QLineEdit;
-class XYInput : public XYMovableWidget, public XYBorderShadowWidget
+class XYInput : public XYBorderShadowWidget
 {
     Q_OBJECT
 public:
@@ -13,13 +14,21 @@ public:
     explicit XYInput(QWidget *parent = 0);
     ~XYInput();
 
+private slots:
+    void mslotFindTranslate(const QString &keyword); // 查找输入内容对应的词（中英文都通过这个接口）
+
 protected:
     bool eventFilter(QObject *obj, QEvent *event);
+
+private:
+    void load();           // 装载查找到的内容，并显示出来
 
 private:
     static XYInput *mopInstance;
     QWidget   *mopLatestWidget;
     QLineEdit *mopLineEdit;
+
+    XYTranslateListModel *mopTransLateModel;
 };
 
 #endif // XYINPUT_H

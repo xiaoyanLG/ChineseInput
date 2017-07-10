@@ -3,7 +3,7 @@
 
 #include <QWidget>
 
-class XYMovableWidget : virtual public QWidget
+class XYMovableWidget : public QWidget
 {
     Q_OBJECT
 public:

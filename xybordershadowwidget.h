@@ -3,7 +3,7 @@
 
 #include <QWidget>
 
-class XYBorderShadowWidget : virtual public QWidget
+class XYBorderShadowWidget : public QWidget
 {
     Q_OBJECT
 public:
