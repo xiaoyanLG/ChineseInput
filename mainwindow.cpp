@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    XYInput::getInstance()->initInputBase("I:/QtProject/ChineseInput/chineseBase/chinese.txt");
     ui->textEdit->installEventFilter(XYInput::getInstance());
     ui->lineEdit->installEventFilter(XYInput::getInstance());
 }

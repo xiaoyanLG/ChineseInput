@@ -11,6 +11,7 @@ class XYInput : public XYBorderShadowWidget
 public:
     static XYInput *getInstance();
     explicit XYInput(QWidget *parent = 0);
+    bool initInputBase(const QString &path);
     ~XYInput();
 
 private slots:
@@ -29,6 +30,7 @@ private:
     QWidget   *mopLatestWidget;
     QLineEdit *mopLineEdit;
 
+    QHash<QString, QString> pyChineseHash;
     XYTranslateView *mopTransLateView;
 };
 

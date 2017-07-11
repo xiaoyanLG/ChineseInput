@@ -7,8 +7,8 @@
 class XYTranslateModel : public QObject
 {
     Q_OBJECT
-    enum TYPE {SOURCE, TRANSLATE, EXTRA};
 public:
+    enum TYPE {SOURCE, TRANSLATE, EXTRA};
     explicit XYTranslateModel(QObject *parent = 0);
     ~XYTranslateModel();
     void appendData(const QList<XYTranslateItem *> &list);

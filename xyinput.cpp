@@ -36,6 +36,29 @@ XYInput::XYInput(QWidget *parent)
     setLayout(layout);
 }
 
+bool XYInput::initInputBase(const QString &path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        return false;
+    }
+
+    while (!file.atEnd())
+    {
+        QString line = file.readLine();
+        line = line.trimmed();
+        if (!line.endsWith("#"))
+        {
+            continue;
+        }
+        line.remove("#");
+        line = line.trimmed();
+        pyChineseHash.insert(line.left(line.indexOf(" ")).trimmed(), line.mid(line.indexOf(" ")).trimmed());
+    }
+    return true;
+}
+
 XYInput::~XYInput()
 {
     delete mopTransLateView;
@@ -146,11 +169,38 @@ void XYInput::mslotFindTranslate(const QString &keyword)
         return;
     }
     QList<XYTranslateItem *> items;
-    for (int i = 0; i < 1; ++i)
+    // 把完全匹配的词放最前面
+    QString equalPy = pyChineseHash.value(keyword);
+    if (!equalPy.isEmpty())
     {
-        items.append(new XYTranslateItem(mopLineEdit->text()));
+        QStringList chineses = equalPy.split(" ", QString::SkipEmptyParts);
+        for (int i = 0; i < chineses.size(); ++i)
+        {
+            items.append(new XYTranslateItem(keyword, chineses.at(i)));
+        }
     }
-    mopTransLateView->prependData(items); // 测试
+
+    for (auto it = pyChineseHash.begin(); it != pyChineseHash.end(); ++it)
+    {
+        QString py = it.key();
+        QString chinese = it.value();
+        if (py.startsWith(keyword))
+        {
+            QStringList chineses = chinese.split(" ", QString::SkipEmptyParts);
+            for (int i = 0; i < chineses.size(); ++i)
+            {
+                if (py == keyword) // 这里前面已经添加了
+                {
+                    break;
+                }
+                else
+                {
+                    items.append(new XYTranslateItem(py, chineses.at(i)));
+                }
+            }
+        }
+    }
+    mopTransLateView->setData(items);
     load();
 }
 
@@ -183,6 +233,11 @@ void XYInput::show()
 
 void XYInput::load()
 {
+    if (mopTransLateView->itemCount() == 0) // 当没有找到词组，直接关闭退出
+    {
+        mopTransLateView->close();
+        return;
+    }
     QDesktopWidget *desk = qApp->desktop();
     int pos_x, pos_y;
     pos_x = this->pos().x();

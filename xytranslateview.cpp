@@ -15,6 +15,7 @@ XYTranslateView::XYTranslateView(QWidget *parent)
     moFont = qApp->font();
     miCurrentPage = 0;
     miMaxVisibleItem = 7;
+    showType = XYTranslateModel::TRANSLATE;
     resize(50, 50);
 }
 
@@ -72,7 +73,7 @@ int XYTranslateView::itemCount()
 
 QString XYTranslateView::getData(int index)
 {
-    return mopModel->data(miCurrentPage * miMaxVisibleItem + index - 1);
+    return mopModel->data(miCurrentPage * miMaxVisibleItem + index - 1, showType);
 }
 
 void XYTranslateView::show()
@@ -95,7 +96,7 @@ void XYTranslateView::paintEvent(QPaintEvent *event)
         int index = i + miCurrentPage * miMaxVisibleItem;
         if (mopModel->haveData(index))
         {
-            QString data = QString("%1.%2").arg(i + 1).arg(mopModel->data(index));
+            QString data = QString("%1.%2").arg(i + 1).arg(mopModel->data(index, showType));
             painter.drawText(15, 25 + i * (metrics.height() + 5), data);
             max_width = qMax(metrics.width(data), max_width);
         }

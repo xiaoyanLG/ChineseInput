@@ -33,6 +33,7 @@ private:
 
     int miCurrentPage;
     int miMaxVisibleItem;
+    XYTranslateModel::TYPE showType;
 
     friend class XYInput;
 };
