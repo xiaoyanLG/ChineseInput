@@ -11,9 +11,14 @@ XYTranslateModel::~XYTranslateModel()
 
 }
 
-void XYTranslateModel::addData(const QList<XYTranslateItem *> &list)
+void XYTranslateModel::appendData(const QList<XYTranslateItem *> &list)
 {
     mlistFindTranslates += list;
+}
+
+void XYTranslateModel::prependData(const QList<XYTranslateItem *> &list)
+{
+    mlistFindTranslates = list + mlistFindTranslates;
 }
 
 void XYTranslateModel::setData(const QList<XYTranslateItem *> &list)

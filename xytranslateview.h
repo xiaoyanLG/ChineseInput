@@ -12,7 +12,8 @@ class XYTranslateView : public XYBorderShadowWidget
 public:
     explicit XYTranslateView(QWidget *parent = 0);
     ~XYTranslateView();
-    void addData(const QList<XYTranslateItem *> &list);
+    void appendData(const QList<XYTranslateItem *> &list);
+    void prependData(const QList<XYTranslateItem *> &list);
     void setData(const QList<XYTranslateItem *> &list);
     void clear();
     void setFont(const QFont &font);

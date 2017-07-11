@@ -23,9 +23,14 @@ XYTranslateView::~XYTranslateView()
     delete mopModel;
 }
 
-void XYTranslateView::addData(const QList<XYTranslateItem *> &list)
+void XYTranslateView::appendData(const QList<XYTranslateItem *> &list)
 {
-    mopModel->addData(list);
+    mopModel->appendData(list);
+}
+
+void XYTranslateView::prependData(const QList<XYTranslateItem *> &list)
+{
+    mopModel->prependData(list);
 }
 
 void XYTranslateView::setData(const QList<XYTranslateItem *> &list)
@@ -72,7 +77,7 @@ QString XYTranslateView::getData(int index)
 
 void XYTranslateView::show()
 {
-    update();
+    repaint();
     QWidget::show();
 }
 

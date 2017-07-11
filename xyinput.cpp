@@ -28,7 +28,7 @@ XYInput::XYInput(QWidget *parent)
                    | Qt::WindowDoesNotAcceptFocus);
     this->setAttribute(Qt::WA_TranslucentBackground);
     QHBoxLayout *layout = new QHBoxLayout;
-    layout->setContentsMargins(QMargins(13, 13, 20, 13));
+    layout->setContentsMargins(QMargins(13, 13, 13, 13));
     mopTransLateView = new XYTranslateView;
     mopLineEdit = new QLineEdit;
     mopLineEdit->installEventFilter(this);
@@ -152,7 +152,7 @@ void XYInput::mslotFindTranslate(const QString &keyword)
     {
         items.append(new XYTranslateItem(mopLineEdit->text()));
     }
-    mopTransLateView->addData(items); // 测试
+    mopTransLateView->prependData(items); // 测试
     load();
 }
 
@@ -178,6 +178,7 @@ void XYInput::show()
     {
         pos_y = desk->height() - this->height();
     }
+
     this->move(pos_x, pos_y);
     QWidget::show();
 }
@@ -196,7 +197,11 @@ void XYInput::load()
     {
         pos_y = this->pos().y() - mopTransLateView->height() + 15;
     }
-    mopTransLateView->move(pos_x, pos_y);
+
+    if (mopTransLateView->pos() != QPoint(pos_x, pos_y))
+    {
+        mopTransLateView->move(pos_x, pos_y);
+    }
     mopTransLateView->show();
 }
 

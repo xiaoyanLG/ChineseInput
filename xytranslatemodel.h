@@ -11,7 +11,8 @@ class XYTranslateModel : public QObject
 public:
     explicit XYTranslateModel(QObject *parent = 0);
     ~XYTranslateModel();
-    void addData(const QList<XYTranslateItem *> &list);
+    void appendData(const QList<XYTranslateItem *> &list);
+    void prependData(const QList<XYTranslateItem *> &list);
     void setData(const QList<XYTranslateItem *> &list);
     void clear();
 
