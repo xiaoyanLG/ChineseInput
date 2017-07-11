@@ -12,6 +12,13 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+
+protected:
+    bool          mbLeftMousePressed;
+    QPoint        moLastPos;
 
 };
 

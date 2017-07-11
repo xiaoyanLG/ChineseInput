@@ -1,7 +1,6 @@
 ﻿#ifndef XYINPUT_H
 #define XYINPUT_H
 
-#include "xymovablewidget.h"
 #include "xybordershadowwidget.h"
 #include "xytranslateview.h"
 

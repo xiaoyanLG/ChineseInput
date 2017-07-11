@@ -17,7 +17,6 @@ private:
     QString  msExtra;
 
     friend class XYTranslateModel;
-    friend class XYTranslateDelegate;
 };
 
 #endif // XYTRANSLATEITEM_H

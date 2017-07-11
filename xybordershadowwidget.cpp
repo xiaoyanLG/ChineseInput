@@ -1,11 +1,13 @@
 ﻿#include "xybordershadowwidget.h"
 #include <QPainter>
+#include <QMouseEvent>
 #include <QtMath>
 
 XYBorderShadowWidget::XYBorderShadowWidget(QWidget *parent)
     : QWidget(parent)
 {
     this->setAttribute(Qt::WA_TranslucentBackground);
+    mbLeftMousePressed = false;
 }
 
 XYBorderShadowWidget::~XYBorderShadowWidget()
@@ -33,5 +35,35 @@ void XYBorderShadowWidget::paintEvent(QPaintEvent *event)
         color.setAlpha(alpha > 0? alpha/3:0);
         painter.setPen(color);
         painter.drawPath(path);
+    }
+}
+
+void XYBorderShadowWidget::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+    {
+        mbLeftMousePressed = true;
+        moLastPos = event->globalPos();
+    }
+}
+
+void XYBorderShadowWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+    {
+        mbLeftMousePressed = false;
+        moLastPos = event->globalPos();
+    }
+}
+
+void XYBorderShadowWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    if (mbLeftMousePressed)
+    {
+        QPoint lastpos = pos();
+        lastpos.setX( lastpos.x() + event->globalX() - moLastPos.x());
+        lastpos.setY( lastpos.y() + event->globalY() - moLastPos.y());
+        move(lastpos);
+        moLastPos = event->globalPos();
     }
 }

@@ -4,8 +4,6 @@
 #include <QEvent>
 #include <QKeyEvent>
 #include <QApplication>
-#include <QAbstractItemView>
-#include <QListView>
 #include <QDesktopWidget>
 #include <QDebug>
 

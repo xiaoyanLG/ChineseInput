@@ -15,7 +15,6 @@ DEFINES += QT_KEYPAD_NAVIGATION
 SOURCES += main.cpp\
         mainwindow.cpp \
     xyinput.cpp \
-    xymovablewidget.cpp \
     xybordershadowwidget.cpp \
     xytranslateitem.cpp \
     xytranslateview.cpp \
@@ -23,7 +22,6 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     xyinput.h \
-    xymovablewidget.h \
     xybordershadowwidget.h \
     xytranslateitem.h \
     xytranslateview.h \

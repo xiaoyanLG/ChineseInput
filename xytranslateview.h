@@ -3,7 +3,6 @@
 
 #include "xybordershadowwidget.h"
 #include "xytranslatemodel.h"
-#include <QListView>
 
 class XYTranslateDelegate;
 class XYTranslateView : public XYBorderShadowWidget
