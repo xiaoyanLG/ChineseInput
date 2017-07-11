@@ -184,19 +184,17 @@ void XYInput::mslotFindTranslate(const QString &keyword)
     {
         QString py = it.key();
         QString chinese = it.value();
+
         if (py.startsWith(keyword))
         {
+            if (py == keyword) // 这里前面已经添加了
+            {
+                continue;
+            }
             QStringList chineses = chinese.split(" ", QString::SkipEmptyParts);
             for (int i = 0; i < chineses.size(); ++i)
             {
-                if (py == keyword) // 这里前面已经添加了
-                {
-                    break;
-                }
-                else
-                {
-                    items.append(new XYTranslateItem(py, chineses.at(i)));
-                }
+                items.append(new XYTranslateItem(py, chineses.at(i)));
             }
         }
     }
