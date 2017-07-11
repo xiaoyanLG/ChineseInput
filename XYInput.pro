@@ -18,15 +18,15 @@ SOURCES += main.cpp\
     xymovablewidget.cpp \
     xybordershadowwidget.cpp \
     xytranslateitem.cpp \
-    xytranslatelistmodel.cpp
+    xytranslateview.cpp \
+    xytranslatemodel.cpp
 
 HEADERS  += mainwindow.h \
     xyinput.h \
     xymovablewidget.h \
     xybordershadowwidget.h \
     xytranslateitem.h \
-    xytranslatelistmodel.h
+    xytranslateview.h \
+    xytranslatemodel.h
 
 FORMS    += mainwindow.ui
-
-LIBS += -lws2_32 -ladvapi32 -lkernel32 -luser32

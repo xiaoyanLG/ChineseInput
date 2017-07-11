@@ -6,7 +6,7 @@
 #include <QApplication>
 #include <QAbstractItemView>
 #include <QListView>
-#include <Windows.h>
+#include <QDesktopWidget>
 #include <QDebug>
 
 XYInput *XYInput::mopInstance;
@@ -29,6 +29,7 @@ XYInput::XYInput(QWidget *parent)
     this->setAttribute(Qt::WA_TranslucentBackground);
     QHBoxLayout *layout = new QHBoxLayout;
     layout->setContentsMargins(QMargins(13, 13, 20, 13));
+    mopTransLateView = new XYTranslateView;
     mopLineEdit = new QLineEdit;
     mopLineEdit->installEventFilter(this);
     layout->addWidget(mopLineEdit);
@@ -39,7 +40,7 @@ XYInput::XYInput(QWidget *parent)
 
 XYInput::~XYInput()
 {
-
+    delete mopTransLateView;
 }
 
 bool XYInput::eventFilter(QObject *obj, QEvent *event)
@@ -53,26 +54,71 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
             {
             case Qt::Key_Return:
             case Qt::Key_Enter:
-                qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, mopLineEdit->text()));
+                qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
+                                                               Qt::Key_unknown,
+                                                               Qt::NoModifier,
+                                                               mopLineEdit->text()));
                 close();
                 break;
+            case Qt::Key_Equal:
+                mopTransLateView->nextPage();
+                mopTransLateView->update();
+                return true;
+            case Qt::Key_Minus:
+                mopTransLateView->prePage();
+                mopTransLateView->update();
+                return true;
+            case Qt::Key_Space:
+                qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
+                                                               Qt::Key_unknown,
+                                                               Qt::NoModifier,
+                                                               mopTransLateView->getData(1)));
+                close();
+                return true;
             default:
                 break;
             }
+            if (keyEvent->key() >= Qt::Key_0 && keyEvent->key() <= Qt::Key_9 && keyEvent->modifiers() != Qt::KeypadModifier)
+            {
+                int index = keyEvent->text().toInt();
+                if (index > 0 && index <= mopTransLateView->miMaxVisibleItem && mopTransLateView->itemCount() >= index)
+                {
+                    qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
+                                                                   Qt::Key_unknown,
+                                                                   Qt::NoModifier,
+                                                                   mopTransLateView->getData(index)));
+                    close();
+                }
+                return true;
+            }
         }
-        else if (keyEvent->key() != Qt::Key_unknown && keyEvent->modifiers() == Qt::NoModifier)
+        else if (keyEvent->key() != Qt::Key_unknown &&
+                 (keyEvent->modifiers() == Qt::NoModifier || keyEvent->modifiers() == Qt::KeypadModifier))
         {
             mopLatestWidget = static_cast<QWidget *>(obj);
             XYInput *input = XYInput::getInstance();
             if (!input->isVisible())
             {
-                input->mopLineEdit->clear();
-                input->move(QCursor::pos());
-                input->show();
+                if (keyEvent->key() >= Qt::Key_A && keyEvent->key() <= Qt::Key_Z)
+                {
+                    input->mopLineEdit->clear();
+                    input->mopTransLateView->clear();
+                    input->show();
+                    qApp->postEvent(input->mopLineEdit, new QKeyEvent(QEvent::KeyPress,
+                                                                      keyEvent->key(),
+                                                                      keyEvent->modifiers(),
+                                                                      keyEvent->text()));
+                    return true;
+                }
             }
-
-            qApp->postEvent(input->mopLineEdit, new QKeyEvent(QEvent::KeyPress, keyEvent->key(), Qt::NoModifier, keyEvent->text()));
-            return true;
+            else
+            {
+                qApp->postEvent(input->mopLineEdit, new QKeyEvent(QEvent::KeyPress,
+                                                                  keyEvent->key(),
+                                                                  keyEvent->modifiers(),
+                                                                  keyEvent->text()));
+                return true;
+            }
         }
     }
     else if (QEvent::InputMethod == event->type())
@@ -84,7 +130,7 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
             qDebug("Text: %s", me->commitString().toUtf8().data());
         }
         // 如果想屏蔽，直接返回true
-//        return true;
+        // return true;
     }
     else if (QEvent::FocusOut == event->type())
     {
@@ -96,11 +142,61 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
 
 void XYInput::mslotFindTranslate(const QString &keyword)
 {
+    if (keyword.isEmpty()) // 如果传入的词为空了，代表删完了，应该关闭输入窗口
+    {
+        close();
+        return;
+    }
+    QList<XYTranslateItem *> items;
+    for (int i = 0; i < 1; ++i)
+    {
+        items.append(new XYTranslateItem(mopLineEdit->text()));
+    }
+    mopTransLateView->addData(items); // 测试
     load();
+}
+
+void XYInput::close()
+{
+    mopTransLateView->clear();
+    mopTransLateView->repaint(); // 清理view,避免显示的时候刷新
+    mopTransLateView->close();
+    QWidget::close();
+}
+
+void XYInput::show()
+{
+    QDesktopWidget *desk = qApp->desktop();
+    int pos_x, pos_y;
+    pos_x = QCursor::pos().x();
+    pos_y = QCursor::pos().y();
+    if (pos_x + this->width() > desk->width())
+    {
+        pos_x = desk->width() - this->width();
+    }
+    if (pos_y + this->height() > desk->height())
+    {
+        pos_y = desk->height() - this->height();
+    }
+    this->move(pos_x, pos_y);
+    QWidget::show();
 }
 
 void XYInput::load()
 {
-
+    QDesktopWidget *desk = qApp->desktop();
+    int pos_x, pos_y;
+    pos_x = this->pos().x();
+    pos_y = this->pos().y() + this->height() - 15;
+    if (pos_x + mopTransLateView->width() > desk->width())
+    {
+        pos_x = desk->width() - mopTransLateView->width();
+    }
+    if (pos_y + mopTransLateView->height() > desk->height())
+    {
+        pos_y = this->pos().y() - mopTransLateView->height() + 15;
+    }
+    mopTransLateView->move(pos_x, pos_y);
+    mopTransLateView->show();
 }
 
