@@ -18,13 +18,19 @@ SOURCES += main.cpp\
     xybordershadowwidget.cpp \
     xytranslateitem.cpp \
     xytranslateview.cpp \
-    xytranslatemodel.cpp
+    xytranslatemodel.cpp \
+    xymenu.cpp \
+    xymenustyle.cpp \
+    xytooltips.cpp
 
 HEADERS  += mainwindow.h \
     xyinput.h \
     xybordershadowwidget.h \
     xytranslateitem.h \
     xytranslateview.h \
-    xytranslatemodel.h
+    xytranslatemodel.h \
+    xymenu.h \
+    xymenustyle.h \
+    xytooltips.h
 
 FORMS    += mainwindow.ui

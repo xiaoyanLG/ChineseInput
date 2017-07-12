@@ -10,6 +10,12 @@ public:
     explicit XYBorderShadowWidget(QWidget *parent = 0);
     ~XYBorderShadowWidget();
 
+signals:
+    void closed();
+
+public slots:
+    bool close();
+
 protected:
     void paintEvent(QPaintEvent *event);
     void mousePressEvent(QMouseEvent *event);

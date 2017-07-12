@@ -27,6 +27,30 @@ void XYTranslateModel::setData(const QList<XYTranslateItem *> &list)
     mlistFindTranslates = list;
 }
 
+void XYTranslateModel::delItem(XYTranslateItem *item)
+{
+    delete item;
+    mlistFindTranslates.removeAll(item);
+}
+
+void XYTranslateModel::stickItem(XYTranslateItem *item)
+{
+    mlistFindTranslates.removeAll(item);
+    mlistFindTranslates.prepend(item);
+}
+
+XYTranslateItem *XYTranslateModel::getItem(int index)
+{
+    if (mlistFindTranslates.size() > index)
+    {
+        return mlistFindTranslates.at(index);
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
 void XYTranslateModel::clear()
 {
     qDeleteAll(mlistFindTranslates);
@@ -55,8 +79,12 @@ QString XYTranslateModel::data(int index, int role) const
         return mlistFindTranslates.at(index)->msSource;
     case TRANSLATE:
         return mlistFindTranslates.at(index)->msTranslate;
+    case COMPLETE:
+        return mlistFindTranslates.at(index)->msTranslate;
     case EXTRA:
         return mlistFindTranslates.at(index)->msExtra;
+    case TIMES:
+        return QString::number(mlistFindTranslates.at(index)->miTimes);
     default:
         return QString();
     }

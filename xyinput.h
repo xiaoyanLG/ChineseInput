@@ -16,7 +16,7 @@ public:
 
 private slots:
     void mslotFindTranslate(const QString &keyword); // 查找输入内容对应的词（中英文都通过这个接口）
-    void close();
+    bool close();
     void show();
 
 protected:
@@ -32,6 +32,8 @@ private:
 
     QHash<QString, QString> pyChineseHash;
     XYTranslateView *mopTransLateView;
+
+    friend class XYTranslateView;
 };
 
 #endif // XYINPUT_H

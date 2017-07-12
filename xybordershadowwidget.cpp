@@ -15,6 +15,12 @@ XYBorderShadowWidget::~XYBorderShadowWidget()
 
 }
 
+bool XYBorderShadowWidget::close()
+{
+    emit closed();
+    return QWidget::close();
+}
+
 void XYBorderShadowWidget::paintEvent(QPaintEvent *event)
 {
     QPainterPath path;

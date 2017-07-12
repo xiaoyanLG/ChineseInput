@@ -202,12 +202,12 @@ void XYInput::mslotFindTranslate(const QString &keyword)
     load();
 }
 
-void XYInput::close()
+bool XYInput::close()
 {
     mopTransLateView->clear();
     mopTransLateView->repaint(); // 清理view,避免显示的时候刷新
     mopTransLateView->close();
-    QWidget::close();
+    return XYBorderShadowWidget::close();
 }
 
 void XYInput::show()

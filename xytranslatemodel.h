@@ -8,12 +8,15 @@ class XYTranslateModel : public QObject
 {
     Q_OBJECT
 public:
-    enum TYPE {SOURCE, TRANSLATE, EXTRA};
+    enum TYPE {SOURCE, TRANSLATE, COMPLETE, EXTRA, TIMES};
     explicit XYTranslateModel(QObject *parent = 0);
     ~XYTranslateModel();
     void appendData(const QList<XYTranslateItem *> &list);
     void prependData(const QList<XYTranslateItem *> &list);
     void setData(const QList<XYTranslateItem *> &list);
+    void delItem(XYTranslateItem *item);
+    void stickItem(XYTranslateItem *item);
+    XYTranslateItem *getItem(int index);
     void clear();
 
     bool haveData(int index) const;
