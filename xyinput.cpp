@@ -144,6 +144,55 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
     return QWidget::eventFilter(obj, event);
 }
 
+QString XYInput::splitePinyin(const QString &pinyin, int &num)
+{
+    static QString shenmu = "bpmfdtnlgkhjqxzcsywr";
+    static QStringList zcs = QString("z c s").split(" ");
+    static QStringList zhchsh = QString("zh ch sh").split(" ");
+    static QStringList yunmu = QString("a o e i u v ai ei ao ou iu ie ue er an en in un ang eng ing ong uan uang ian iang").split(" ");
+
+    QString result;
+    int i = 0;
+    while (i < pinyin.size())
+    {
+        if (shenmu.contains(pinyin.at(i))) // 是声母
+        {
+            int ym = 1;
+            int h = 0; // zh ch sh标记
+            // zh ch sh 多加一位
+            if (zcs.contains(pinyin.at(i)) && i + 1 < pinyin.size() && pinyin.at(i + 1) == 'h')
+            {
+                h = 1;
+                ym++;
+            }
+
+            // 贪心算法 （尽可能长的找到满足的） 注意：这里有可能还有没有判断全的特殊情况
+            while (ym < pinyin.size() &&
+                   (yunmu.contains(pinyin.mid(i + 1 + h, ym - h))
+                    || pinyin.mid(i + 1 + h, ym - h) == "ua"
+                    || pinyin.mid(i + 1 + h, ym - h) == "ia"
+                    || pinyin.mid(i + 1 + h, ym - h) == "on")) // uan ian ong比较特殊
+            {
+                ym++;
+            }
+            if (!result.isEmpty())
+            {
+                result += "%\'";
+            }
+            result += pinyin.mid(i, ym);
+            i += ym - 1;
+            num++;
+        }
+        else
+        {
+            result += pinyin.at(i);
+        }
+        i++;
+    }
+//    qDebug() << result;
+    return result + "%";
+}
+
 void XYInput::mslotFindTranslate(const QString &keyword)
 {
     if (keyword.isEmpty()) // 如果传入的词为空了，代表删完了，应该关闭输入窗口
@@ -151,8 +200,24 @@ void XYInput::mslotFindTranslate(const QString &keyword)
         close();
         return;
     }
-    XYDB->createInputTable();
-    QList<XYTranslateItem *> list = XYDB->findData(keyword + "%", "basePintying");
+    int num = 0;
+    QString splitePY = splitePinyin(keyword, num);
+    QList<XYTranslateItem *> list;
+    if (num == 1)
+    {
+        QList<XYTranslateItem *> single = XYDB->findData(splitePY, "", "singlePingying");
+
+        for (int i = 0; i < single.size(); ++i)
+        {
+            XYTranslateItem *singleItem = single.at(i);
+            QStringList singles = singleItem->msTranslate.split(" ", QString::SkipEmptyParts);
+            for (int j = 0; j < singles.size(); ++j)
+            {
+                list.append(new XYTranslateItem("", singles.at(j), singleItem->msComplete));
+            }
+        }
+    }
+    list += XYDB->findData(splitePY, QString::number(num), "basePintying");
     mopTransLateView->setData(list);
     load();
 }

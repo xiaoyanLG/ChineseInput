@@ -23,6 +23,8 @@ protected:
     bool eventFilter(QObject *obj, QEvent *event);
 
 private:
+    // 分割拼音，比如women-->wo%'men%,返回分割后的字符串(并加上%模糊查找)，并带回有效的字数
+    QString splitePinyin(const QString &pinyin, int &num);
     void load();           // 装载查找到的内容，并显示出来
 
 private:

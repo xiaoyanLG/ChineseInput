@@ -43,6 +43,7 @@ void XYTranslateView::prependData(const QList<XYTranslateItem *> &list)
 
 void XYTranslateView::setData(const QList<XYTranslateItem *> &list)
 {
+    miCurrentPage = 0;
     mopModel->setData(list);
     update();
 }

@@ -179,7 +179,7 @@ bool XYDatabaseOperation::insertData(const QList<XYTranslateItem *> &list, const
     return ok;
 }
 
-QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const QString &table)
+QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const QString &number, const QString &table)
 {
     QString field1, field2;
     if (table.contains("english"))
@@ -193,12 +193,15 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
         field2 = "chinese";
     }
     QSqlQuery query(QSqlDatabase::database("XYInout"));
-    query.exec(QString("SELECT id, %1, %2, extra, times, stick FROM %3 WHERE %4 like \"%5\" ORDER BY times")
+    query.exec(QString("SELECT id, %1, %2, extra, times, stick FROM %3 "
+                       "WHERE %4 like \"%5\" AND extra like \"%6\" "
+                       "ORDER BY times")
                .arg(field1)
                .arg(field2)
                .arg(table)
                .arg(field1)
-               .arg(key));
+               .arg(key)
+               .arg(number));
 
     QList<XYTranslateItem *> list;
     while (query.next())
