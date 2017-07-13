@@ -21,7 +21,7 @@ XYTranslateView::XYTranslateView(QWidget *parent)
     moFont = qApp->font();
     miCurrentPage = 0;
     miMaxVisibleItem = 7;
-    showType = XYTranslateModel::TRANSLATE;
+    showType = XYTranslateModel::COMPLETE;
     setMouseTracking(true);
     resize(50, 50);
 }

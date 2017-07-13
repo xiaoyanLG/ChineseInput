@@ -1,4 +1,5 @@
 ﻿#include "xyinput.h"
+#include "xydatabaseoperation.h"
 #include <QLineEdit>
 #include <QHBoxLayout>
 #include <QEvent>
@@ -38,25 +39,7 @@ XYInput::XYInput(QWidget *parent)
 
 bool XYInput::initInputBase(const QString &path)
 {
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        return false;
-    }
-
-    while (!file.atEnd())
-    {
-        QString line = file.readLine();
-        line = line.trimmed();
-        if (!line.endsWith("#"))
-        {
-            continue;
-        }
-        line.remove("#");
-        line = line.trimmed();
-        pyChineseHash.insert(line.left(line.indexOf(" ")).trimmed(), line.mid(line.indexOf(" ")).trimmed());
-    }
-    return true;
+    return XYDB->openDatabaseFile(path);
 }
 
 XYInput::~XYInput()
@@ -168,37 +151,9 @@ void XYInput::mslotFindTranslate(const QString &keyword)
         close();
         return;
     }
-    QList<XYTranslateItem *> items;
-    // 把完全匹配的词放最前面
-    QString equalPy = pyChineseHash.value(keyword);
-    if (!equalPy.isEmpty())
-    {
-        QStringList chineses = equalPy.split(" ", QString::SkipEmptyParts);
-        for (int i = 0; i < chineses.size(); ++i)
-        {
-            items.append(new XYTranslateItem(keyword, chineses.at(i)));
-        }
-    }
-
-    for (auto it = pyChineseHash.begin(); it != pyChineseHash.end(); ++it)
-    {
-        QString py = it.key();
-        QString chinese = it.value();
-
-        if (py.startsWith(keyword))
-        {
-            if (py == keyword) // 这里前面已经添加了
-            {
-                continue;
-            }
-            QStringList chineses = chinese.split(" ", QString::SkipEmptyParts);
-            for (int i = 0; i < chineses.size(); ++i)
-            {
-                items.append(new XYTranslateItem(py, chineses.at(i)));
-            }
-        }
-    }
-    mopTransLateView->setData(items);
+    XYDB->createInputTable();
+    QList<XYTranslateItem *> list = XYDB->findData(keyword + "%", "basePintying");
+    mopTransLateView->setData(list);
     load();
 }
 

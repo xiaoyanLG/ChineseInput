@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     xytranslatemodel.cpp \
     xymenu.cpp \
     xymenustyle.cpp \
-    xytooltips.cpp
+    xytooltips.cpp \
+    xydatabaseoperation.cpp
 
 HEADERS  += mainwindow.h \
     xyinput.h \
@@ -31,6 +32,7 @@ HEADERS  += mainwindow.h \
     xytranslatemodel.h \
     xymenu.h \
     xymenustyle.h \
-    xytooltips.h
+    xytooltips.h \
+    xydatabaseoperation.h
 
 FORMS    += mainwindow.ui
