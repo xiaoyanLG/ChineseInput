@@ -20,6 +20,7 @@ public:
     bool createInputTable();
     bool insertData(XYTranslateItem *item, const QString &table);
     bool insertData(const QList<XYTranslateItem *> &list, const QString &table);
+    bool delItem(XYTranslateItem *item);
     QList<XYTranslateItem *> findData(const QString &key,
                                       const QString &number,
                                       const QString &table);

@@ -1,6 +1,7 @@
 ﻿#include "xytranslateview.h"
 #include "xymenu.h"
 #include "xyinput.h"
+#include "xydatabaseoperation.h"
 
 #include <QApplication>
 #include <QPainter>
@@ -65,6 +66,7 @@ void XYTranslateView::nextPage()
     {
         miCurrentPage++;
     }
+    repaint();
 }
 
 void XYTranslateView::prePage()
@@ -73,6 +75,7 @@ void XYTranslateView::prePage()
     {
         miCurrentPage--;
     }
+    repaint();
 }
 
 int XYTranslateView::itemCount()
@@ -82,7 +85,7 @@ int XYTranslateView::itemCount()
 
 XYTranslateItem *XYTranslateView::getItem(int index)
 {
-    return mopModel->getItem(index);
+    return mopModel->getItem(index - 1);
 }
 
 QString XYTranslateView::getData(int index)
@@ -140,9 +143,30 @@ void XYTranslateView::stickItem()
 
     if (item)
     {
-        mopModel->stickItem(item);
-        update();
+        XYTranslateItem *lastStickItem = mopModel->stickItem(item);
+        if (lastStickItem == NULL) // 一般不会出现这样的情况
+        {
+            return;
+        }
+        lastStickItem->mbStick = false;
+        if (item->msSource.toLower().contains("english"))
+        {
+            item->mbStick = true;
+            XYDB->insertData(item, "userEnglishTable");
+            XYDB->insertData(lastStickItem, "userEnglishTable");
+        }
+        else
+        {
+            item->msExtra = QString::number(item->msTranslate.size());
+            item->mbStick = true;
+            item->miTimes = lastStickItem->miTimes + 1;
+            XYDB->insertData(item, "userPingying");
+            XYDB->insertData(lastStickItem, "userPingying");
+        }
+        miCurrentPage = 0;
+        repaint();
     }
+
     // 这里还应该改变词库对应的词条，置顶属性
 }
 
@@ -153,8 +177,9 @@ void XYTranslateView::delItem()
 
     if (item)
     {
+        XYDB->delItem(item); // 必须在item delete之前调用删除数据库内容
         mopModel->delItem(item);
-        update();
+        repaint();
     }
     // 这里还应该删除词库对应的词条
 }

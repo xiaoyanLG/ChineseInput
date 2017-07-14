@@ -33,10 +33,25 @@ void XYTranslateModel::delItem(XYTranslateItem *item)
     mlistFindTranslates.removeAll(item);
 }
 
-void XYTranslateModel::stickItem(XYTranslateItem *item)
+XYTranslateItem * XYTranslateModel::stickItem(XYTranslateItem *item)
 {
+    XYTranslateItem *lastStickItem;
+    if (!mlistFindTranslates.isEmpty())
+    {
+        lastStickItem = mlistFindTranslates.at(0);
+    }
+    for (int i = 0; i < mlistFindTranslates.size(); ++i)
+    {
+        if (item->msExtra == mlistFindTranslates.at(i)->msExtra
+                && mlistFindTranslates.at(i)->mbStick)
+        {
+            lastStickItem = mlistFindTranslates.at(i);
+            break;
+        }
+    }
     mlistFindTranslates.removeAll(item);
     mlistFindTranslates.prepend(item);
+    return lastStickItem;
 }
 
 XYTranslateItem *XYTranslateModel::getItem(int index)

@@ -15,7 +15,7 @@ public:
     void prependData(const QList<XYTranslateItem *> &list);
     void setData(const QList<XYTranslateItem *> &list);
     void delItem(XYTranslateItem *item);
-    void stickItem(XYTranslateItem *item);
+    XYTranslateItem *stickItem(XYTranslateItem *item);
     XYTranslateItem *getItem(int index);
     void clear();
 

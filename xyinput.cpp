@@ -61,32 +61,24 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
             {
             case Qt::Key_Return:
             case Qt::Key_Enter:
-                completeInput(new QKeyEvent(QEvent::KeyPress,
-                                            Qt::Key_unknown,
-                                            Qt::NoModifier,
-                                            mopLineEdit->text()));
+                completeInput(mopLineEdit->text());
                 break;
             case Qt::Key_Equal:
                 mopTransLateView->nextPage();
-                mopTransLateView->update();
                 return true;
             case Qt::Key_Minus:
                 mopTransLateView->prePage();
-                mopTransLateView->update();
                 return true;
             case Qt::Key_Shift:
                 setEnglish(!mbEnglish);
-                load();
+                mslotFindTranslate(mopLineEdit->text());
                 return true;
             case Qt::Key_Tab:
                 showMoreInfo();
                 load();
                 return true;
             case Qt::Key_Space:
-                completeInput(new QKeyEvent(QEvent::KeyPress,
-                                            Qt::Key_unknown,
-                                            Qt::NoModifier,
-                                            mopTransLateView->getData(1)));
+                completeInput(mopTransLateView->getData(1), mopTransLateView->getItem(1));
                 return true;
             default:
                 break;
@@ -96,10 +88,7 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
                 int index = keyEvent->text().toInt();
                 if (index > 0 && index <= mopTransLateView->miMaxVisibleItem && mopTransLateView->itemCount() >= index)
                 {
-                    completeInput(new QKeyEvent(QEvent::KeyPress,
-                                                Qt::Key_unknown,
-                                                Qt::NoModifier,
-                                                mopTransLateView->getData(index)));
+                    completeInput(mopTransLateView->getData(index), mopTransLateView->getItem(index));
                 }
                 return true;
             }
@@ -110,11 +99,15 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
             XYInput *input = XYInput::getInstance();
             if (!input->isVisible())
             {
-                if (keyEvent->key() >= Qt::Key_A && keyEvent->key() <= Qt::Key_Z)
+                if (keyEvent->key() >= Qt::Key_A && keyEvent->key() <= Qt::Key_Z
+                        || keyEvent->key() == Qt::Key_Shift)
                 {
                     input->mopLineEdit->clear();
                     input->mopTransLateView->clear();
-                    input->show();
+                    if (!keyEvent->text().isEmpty())
+                    {
+                        input->show();
+                    }
                     qApp->postEvent(input->mopLineEdit, new QKeyEvent(QEvent::KeyPress,
                                                                       keyEvent->key(),
                                                                       keyEvent->modifiers(),
@@ -156,7 +149,7 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
     static QString shenmu = "bpmfdtnlgkhjqxzcsywr";
     static QStringList zcs = QString("z c s").split(" ");
     static QStringList zhchsh = QString("zh ch sh").split(" ");
-    static QStringList yunmu = QString("a o e i u v ai ei ao ou iu ie ue er an en in un ang eng ing ong uan uang ian iang").split(" ");
+    static QStringList yunmu = QString("a o e i u v ai ei ao ou iu ui ie ue er an en in un ang eng ing ong uan uang ian iang").split(" ");
     static QStringList yunmuA = QString("a o e ai ei an ang en ao ou").split(" ");
     QString result;
     int cur_index = 0;
@@ -221,7 +214,7 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
 
 void XYInput::mslotFindTranslate(const QString &keyword)
 {
-    if (keyword.isEmpty()) // 如果传入的词为空了，代表删完了，应该关闭输入窗口
+    if (keyword.trimmed().isEmpty()) // 如果传入的词为空了，代表删完了，应该关闭输入窗口
     {
         close();
         return;
@@ -248,7 +241,7 @@ void XYInput::mslotFindTranslate(const QString &keyword)
                 QStringList singles = singleItem->msTranslate.split(" ", QString::SkipEmptyParts);
                 for (int j = 0; j < singles.size(); ++j)
                 {
-                    list.append(new XYTranslateItem("", singles.at(j), singleItem->msComplete));
+                    list.append(new XYTranslateItem("singlePingying", singles.at(j), singleItem->msComplete));
                 }
             }
             qDeleteAll(single);
@@ -256,14 +249,34 @@ void XYInput::mslotFindTranslate(const QString &keyword)
         list += XYDB->findData(splitePY + "%", QString::number(num), "basePintying");
     }
 
+    deDuplication(list);
     mopTransLateView->setData(list);
     load();
 }
 
-void XYInput::completeInput(QKeyEvent *event)
+void XYInput::completeInput(const QString &text, XYTranslateItem *item)
 {
-    qApp->postEvent(mopLatestWidget, event);
-    emit complete(event->text());
+    if (!text.isEmpty()) // 如果为空直接退出
+    {
+        qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
+                                                       Qt::Key_unknown,
+                                                       Qt::NoModifier,
+                                                       text));
+        if (item) // 保存用户词库
+        {
+            item->miTimes += 1;
+            if (item->msSource.toLower().contains("english"))
+            {
+                XYDB->insertData(item, "userEnglishTable");
+            }
+            else
+            {
+                item->msExtra = QString::number(item->msTranslate.size());
+                XYDB->insertData(item, "userPingying");
+            }
+        }
+        emit complete(text);
+    }
     close();
 }
 
@@ -359,5 +372,41 @@ void XYInput::load()
     }
     mopTransLateView->repaint();
     mopTransLateView->show();
+}
+
+void XYInput::deDuplication(QList<XYTranslateItem *> &items)
+{
+    QList<XYTranslateItem *> temp;
+    for (int i = 0; i < items.size(); ++i)
+    {
+        XYTranslateItem *item = items.at(i);
+        bool find = false;
+        for (int j = 0; j < temp.size(); ++j)
+        {
+            if (mbEnglish)
+            {
+                if (item->msComplete == temp.at(j)->msComplete)
+                {
+                    find = true;
+                    delete item;
+                    break;
+                }
+            }
+            else
+            {
+                if (item->msTranslate == temp.at(j)->msTranslate)
+                {
+                    find = true;
+                    delete item;
+                    break;
+                }
+            }
+        }
+        if (!find)
+        {
+            temp.append(item);
+        }
+    }
+    items = temp;
 }
 
