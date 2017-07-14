@@ -151,7 +151,24 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
     static QStringList zhchsh = QString("zh ch sh").split(" ");
     static QStringList yunmu = QString("a o e i u v ai ei ao ou iu ui ie ue er an en in un ang eng ing ong uan uang ian iang").split(" ");
     static QStringList yunmuA = QString("a o e ai ei an ang en ao ou").split(" ");
+
     QString result;
+
+    if (pinyin.contains("\'"))
+    {
+        QStringList children = pinyin.split("\'", QString::SkipEmptyParts);
+        for (int i = 0; i < children.size(); ++i)
+        {
+            int cur_num = 0;
+            if (!result.isEmpty()) // 每次进入一定的新的字的拼音
+            {
+                result += "%\'";
+            }
+            result += splitePinyin(children.at(i), cur_num);
+            num += cur_num;
+        }
+        return result;
+    }
     int cur_index = 0;
     while (cur_index < pinyin.size())
     {
