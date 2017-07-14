@@ -14,10 +14,18 @@ public:
     bool initInputBase(const QString &path);
     ~XYInput();
 
-private slots:
-    void mslotFindTranslate(const QString &keyword); // 查找输入内容对应的词（中英文都通过这个接口）
+signals:
+    void complete(const QString &out);
+
+public slots:
+    void setEnglish(bool english);
+    void showMoreInfo();
     bool close();
     void show();
+
+private slots:
+    void mslotFindTranslate(const QString &keyword); // 查找输入内容对应的词（中英文都通过这个接口）
+    void completeInput(QKeyEvent *event);
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event);
@@ -28,11 +36,11 @@ private:
     void load();           // 装载查找到的内容，并显示出来
 
 private:
-    static XYInput *mopInstance;
-    QWidget   *mopLatestWidget;
-    QLineEdit *mopLineEdit;
+    static XYInput  *mopInstance;
+    QWidget         *mopLatestWidget;
+    QLineEdit       *mopLineEdit;
+    bool             mbEnglish;
 
-    QHash<QString, QString> pyChineseHash;
     XYTranslateView *mopTransLateView;
 
     friend class XYTranslateView;

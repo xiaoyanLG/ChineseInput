@@ -8,7 +8,7 @@ class XYTranslateModel : public QObject
 {
     Q_OBJECT
 public:
-    enum TYPE {SOURCE, TRANSLATE, COMPLETE, EXTRA, TIMES};
+    enum TYPE {SOURCE, TRANSLATE, COMPLETE, COMP_TRAN, TRAN_COMP, EXTRA, TIMES};
     explicit XYTranslateModel(QObject *parent = 0);
     ~XYTranslateModel();
     void appendData(const QList<XYTranslateItem *> &list);

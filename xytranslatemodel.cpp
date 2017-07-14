@@ -80,7 +80,11 @@ QString XYTranslateModel::data(int index, int role) const
     case TRANSLATE:
         return mlistFindTranslates.at(index)->msTranslate;
     case COMPLETE:
-        return mlistFindTranslates.at(index)->msTranslate;
+        return mlistFindTranslates.at(index)->msComplete;
+    case COMP_TRAN:
+        return mlistFindTranslates.at(index)->msComplete + "  " + mlistFindTranslates.at(index)->msTranslate;
+    case TRAN_COMP:
+        return mlistFindTranslates.at(index)->msTranslate + "  " + mlistFindTranslates.at(index)->msComplete;
     case EXTRA:
         return mlistFindTranslates.at(index)->msExtra;
     case TIMES:

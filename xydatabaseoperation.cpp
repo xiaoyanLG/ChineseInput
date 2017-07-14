@@ -2,6 +2,7 @@
 #include "xytranslateitem.h"
 #include <QSqlDatabase>
 #include <QSqlQuery>
+#include <QSqlError>
 #include <QFile>
 #include <QVariant>
 XYDatabaseOperation *XYDatabaseOperation::DB = NULL;
@@ -75,6 +76,7 @@ bool XYDatabaseOperation::createInputTable()
                          "stick BOOL NULL)");
     if (!ok)
     {
+        qDebug("error: %s", query.lastError().text());
         return false;
     }
 
@@ -88,6 +90,7 @@ bool XYDatabaseOperation::createInputTable()
                     "stick BOOL NULL)");
     if (!ok)
     {
+        qDebug("error: %s", query.lastError().text());
         return false;
     }
 
@@ -101,6 +104,7 @@ bool XYDatabaseOperation::createInputTable()
                     "stick BOOL NULL)");
     if (!ok)
     {
+        qDebug("error: %s", query.lastError().text());
         return false;
     }
 
@@ -114,6 +118,7 @@ bool XYDatabaseOperation::createInputTable()
                     "stick BOOL NULL)");
     if (!ok)
     {
+        qDebug("error: %s", query.lastError().text());
         return false;
     }
 
@@ -127,7 +132,44 @@ bool XYDatabaseOperation::createInputTable()
                     "stick BOOL NULL)");
     if (!ok)
     {
+        qDebug("error: %s", query.lastError().text());
         return false;
+    }
+    return ok;
+}
+
+bool XYDatabaseOperation::insertData(XYTranslateItem *item, const QString &table)
+{
+    QString field1, field2;
+    if (table.contains("english"))
+    {
+        field1 = "english";
+        field2 = "translate";
+    }
+    else
+    {
+        field1 = "pingying";
+        field2 = "chinese";
+    }
+
+    QSqlQuery query(QSqlDatabase::database("XYInout"));
+    bool ok = true;
+    query.prepare(QString("INSERT INTO %1 (id, %2, %3, extra, times, stick) "
+                          "VALUES (:id, :%4, :%5, :extra, :times, :stick)")
+                  .arg(table)
+                  .arg(field1)
+                  .arg(field2)
+                  .arg(field1)
+                  .arg(field2));
+    query.bindValue(QString(":%1").arg(field1), item->msComplete);
+    query.bindValue(QString(":%1").arg(field2), item->msTranslate);
+    query.bindValue(":extra", item->msExtra);
+    query.bindValue(":times", item->miTimes);
+    query.bindValue(":stick", item->mbStick);
+    ok = query.exec();
+    if (!ok)
+    {
+        qDebug("error: %s", query.lastError().text());
     }
     return ok;
 }
@@ -165,6 +207,7 @@ bool XYDatabaseOperation::insertData(const QList<XYTranslateItem *> &list, const
         ok = query.exec();
         if (!ok)
         {
+            qDebug("error: %s", query.lastError().text());
             break;
         }
     }
@@ -193,9 +236,9 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
         field2 = "chinese";
     }
     QSqlQuery query(QSqlDatabase::database("XYInout"));
-    query.exec(QString("SELECT id, %1, %2, extra, times, stick FROM %3 "
+    bool ok = query.exec(QString("SELECT id, %1, %2, extra, times, stick FROM %3 "
                        "WHERE %4 like \"%5\" AND extra like \"%6\" "
-                       "ORDER BY times")
+                       "ORDER BY times LIMIT 0,100")
                .arg(field1)
                .arg(field2)
                .arg(table)
@@ -203,6 +246,10 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
                .arg(key)
                .arg(number));
 
+    if (!ok)
+    {
+        qDebug("error: %s", query.lastError().text());
+    }
     QList<XYTranslateItem *> list;
     while (query.next())
     {

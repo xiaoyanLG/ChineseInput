@@ -21,7 +21,7 @@ XYTranslateView::XYTranslateView(QWidget *parent)
     moFont = qApp->font();
     miCurrentPage = 0;
     miMaxVisibleItem = 7;
-    showType = XYTranslateModel::COMPLETE;
+    showType = XYTranslateModel::TRANSLATE;
     setMouseTracking(true);
     resize(50, 50);
 }
@@ -80,9 +80,25 @@ int XYTranslateView::itemCount()
     return mopModel->counts();
 }
 
+XYTranslateItem *XYTranslateView::getItem(int index)
+{
+    return mopModel->getItem(index);
+}
+
 QString XYTranslateView::getData(int index)
 {
-    return mopModel->data(miCurrentPage * miMaxVisibleItem + index - 1, showType);
+    if (showType == XYTranslateModel::COMP_TRAN)
+    {
+        return mopModel->data(miCurrentPage * miMaxVisibleItem + index - 1, XYTranslateModel::COMPLETE);
+    }
+    else if (showType == XYTranslateModel::TRAN_COMP)
+    {
+        return mopModel->data(miCurrentPage * miMaxVisibleItem + index - 1, XYTranslateModel::TRANSLATE);
+    }
+    else
+    {
+        return mopModel->data(miCurrentPage * miMaxVisibleItem + index - 1, showType);
+    }
 }
 
 void XYTranslateView::show()
@@ -103,7 +119,7 @@ void XYTranslateView::show()
             break;
         }
     }
-    resize(qMax(max_width + 30, 200), 25 + i * (metrics.height() + 5));
+    resize(qMax(max_width + 35, 200), 25 + i * (metrics.height() + 5));
     QWidget::show();
 }
 

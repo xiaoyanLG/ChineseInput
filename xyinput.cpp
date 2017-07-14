@@ -26,6 +26,9 @@ XYInput::XYInput(QWidget *parent)
                    | Qt::Tool
                    | Qt::WindowDoesNotAcceptFocus);
     this->setAttribute(Qt::WA_TranslucentBackground);
+
+    mbEnglish = false;
+
     QHBoxLayout *layout = new QHBoxLayout;
     layout->setContentsMargins(QMargins(13, 13, 13, 13));
     mopTransLateView = new XYTranslateView;
@@ -58,11 +61,10 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
             {
             case Qt::Key_Return:
             case Qt::Key_Enter:
-                qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
-                                                               Qt::Key_unknown,
-                                                               Qt::NoModifier,
-                                                               mopLineEdit->text()));
-                close();
+                completeInput(new QKeyEvent(QEvent::KeyPress,
+                                            Qt::Key_unknown,
+                                            Qt::NoModifier,
+                                            mopLineEdit->text()));
                 break;
             case Qt::Key_Equal:
                 mopTransLateView->nextPage();
@@ -72,12 +74,19 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
                 mopTransLateView->prePage();
                 mopTransLateView->update();
                 return true;
+            case Qt::Key_Shift:
+                setEnglish(!mbEnglish);
+                load();
+                return true;
+            case Qt::Key_Tab:
+                showMoreInfo();
+                load();
+                return true;
             case Qt::Key_Space:
-                qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
-                                                               Qt::Key_unknown,
-                                                               Qt::NoModifier,
-                                                               mopTransLateView->getData(1)));
-                close();
+                completeInput(new QKeyEvent(QEvent::KeyPress,
+                                            Qt::Key_unknown,
+                                            Qt::NoModifier,
+                                            mopTransLateView->getData(1)));
                 return true;
             default:
                 break;
@@ -87,17 +96,15 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
                 int index = keyEvent->text().toInt();
                 if (index > 0 && index <= mopTransLateView->miMaxVisibleItem && mopTransLateView->itemCount() >= index)
                 {
-                    qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
-                                                                   Qt::Key_unknown,
-                                                                   Qt::NoModifier,
-                                                                   mopTransLateView->getData(index)));
-                    close();
+                    completeInput(new QKeyEvent(QEvent::KeyPress,
+                                                Qt::Key_unknown,
+                                                Qt::NoModifier,
+                                                mopTransLateView->getData(index)));
                 }
                 return true;
             }
         }
-        else if (keyEvent->key() != Qt::Key_unknown &&
-                 (keyEvent->modifiers() == Qt::NoModifier || keyEvent->modifiers() == Qt::KeypadModifier))
+        else if (keyEvent->key() != Qt::Key_unknown)
         {
             mopLatestWidget = static_cast<QWidget *>(obj);
             XYInput *input = XYInput::getInstance();
@@ -150,47 +157,66 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
     static QStringList zcs = QString("z c s").split(" ");
     static QStringList zhchsh = QString("zh ch sh").split(" ");
     static QStringList yunmu = QString("a o e i u v ai ei ao ou iu ie ue er an en in un ang eng ing ong uan uang ian iang").split(" ");
-
+    static QStringList yunmuA = QString("a o e ai ei an ang en ao ou").split(" ");
     QString result;
-    int i = 0;
-    while (i < pinyin.size())
+    int cur_index = 0;
+    while (cur_index < pinyin.size())
     {
-        if (shenmu.contains(pinyin.at(i))) // 是声母
+        if (!result.isEmpty()) // 每次进入一定的新的字的拼音
+        {
+            result += "%\'";
+        }
+        if (shenmu.contains(pinyin.at(cur_index))) // 是声母
         {
             int ym = 1;
             int h = 0; // zh ch sh标记
             // zh ch sh 多加一位
-            if (zcs.contains(pinyin.at(i)) && i + 1 < pinyin.size() && pinyin.at(i + 1) == 'h')
+            if (zcs.contains(pinyin.at(cur_index)) && cur_index + 1 < pinyin.size() && pinyin.at(cur_index + 1) == 'h')
             {
                 h = 1;
                 ym++;
             }
 
-            // 贪心算法 （尽可能长的找到满足的） 注意：这里有可能还有没有判断全的特殊情况
-            while (ym < pinyin.size() &&
-                   (yunmu.contains(pinyin.mid(i + 1 + h, ym - h))
-                    || pinyin.mid(i + 1 + h, ym - h) == "ua"
-                    || pinyin.mid(i + 1 + h, ym - h) == "ia"
-                    || pinyin.mid(i + 1 + h, ym - h) == "on")) // uan ian ong比较特殊
+            // 贪心查找 （尽可能长的找到满足的） 注意：这里有可能还有没有判断全的特殊情况
+            while ((ym + cur_index) < pinyin.size() &&
+                   (yunmu.contains(pinyin.mid(cur_index + 1 + h, ym - h))
+                    || pinyin.mid(cur_index + 1 + h, ym - h) == "ua"
+                    || pinyin.mid(cur_index + 1 + h, ym - h) == "ia"
+                    || pinyin.mid(cur_index + 1 + h, ym - h) == "on")) // uan ian ong比较特殊
             {
                 ym++;
             }
-            if (!result.isEmpty())
-            {
-                result += "%\'";
-            }
-            result += pinyin.mid(i, ym);
-            i += ym - 1;
-            num++;
+
+            result += pinyin.mid(cur_index, ym);
+            cur_index += ym - 1;
         }
         else
         {
-            result += pinyin.at(i);
+            // 处理独成一字的韵母
+            if (yunmuA.contains(pinyin.at(cur_index)))
+            {
+                int ym = 1;
+                while ((ym + cur_index) < pinyin.size()
+                       && yunmuA.contains(pinyin.mid(cur_index, ym + 1)))
+                {
+                    ym++;
+                }
+                result += pinyin.mid(cur_index, ym);
+                cur_index += ym - 1;
+            }
+            else
+            {
+                result += pinyin.at(cur_index);
+            }
         }
-        i++;
+        num++;
+        cur_index++;
     }
-//    qDebug() << result;
-    return result + "%";
+    if (num == 0)
+    {
+        num++;
+    }
+    return result;
 }
 
 void XYInput::mslotFindTranslate(const QString &keyword)
@@ -200,26 +226,84 @@ void XYInput::mslotFindTranslate(const QString &keyword)
         close();
         return;
     }
-    int num = 0;
-    QString splitePY = splitePinyin(keyword, num);
-    QList<XYTranslateItem *> list;
-    if (num == 1)
-    {
-        QList<XYTranslateItem *> single = XYDB->findData(splitePY, "", "singlePingying");
 
-        for (int i = 0; i < single.size(); ++i)
-        {
-            XYTranslateItem *singleItem = single.at(i);
-            QStringList singles = singleItem->msTranslate.split(" ", QString::SkipEmptyParts);
-            for (int j = 0; j < singles.size(); ++j)
-            {
-                list.append(new XYTranslateItem("", singles.at(j), singleItem->msComplete));
-            }
-        }
+    QList<XYTranslateItem *> list;
+    if (mbEnglish)
+    {
+        list = XYDB->findData(keyword + "%", "", "userEnglishTable");
+        list += XYDB->findData(keyword + "%", "", "englishTable");
     }
-    list += XYDB->findData(splitePY, QString::number(num), "basePintying");
+    else
+    {
+        int num = 0;
+        QString splitePY = splitePinyin(keyword, num);
+        list = XYDB->findData(splitePY + "%", QString::number(num), "userPingying");
+        if (num == 1)
+        {
+            QList<XYTranslateItem *> single = XYDB->findData(splitePY + "%", "", "singlePingying");
+
+            for (int i = 0; i < single.size(); ++i)
+            {
+                XYTranslateItem *singleItem = single.at(i);
+                QStringList singles = singleItem->msTranslate.split(" ", QString::SkipEmptyParts);
+                for (int j = 0; j < singles.size(); ++j)
+                {
+                    list.append(new XYTranslateItem("", singles.at(j), singleItem->msComplete));
+                }
+            }
+            qDeleteAll(single);
+        }
+        list += XYDB->findData(splitePY + "%", QString::number(num), "basePintying");
+    }
+
     mopTransLateView->setData(list);
     load();
+}
+
+void XYInput::completeInput(QKeyEvent *event)
+{
+    qApp->postEvent(mopLatestWidget, event);
+    emit complete(event->text());
+    close();
+}
+
+void XYInput::setEnglish(bool english)
+{
+    mbEnglish = english;
+    if (mbEnglish)
+    {
+        mopTransLateView->showType = XYTranslateModel::COMPLETE;
+    }
+    else
+    {
+        mopTransLateView->showType = XYTranslateModel::TRANSLATE;
+    }
+}
+
+void XYInput::showMoreInfo()
+{
+    if (mbEnglish)
+    {
+        if (mopTransLateView->showType == XYTranslateModel::COMP_TRAN)
+        {
+            mopTransLateView->showType = XYTranslateModel::COMPLETE;
+        }
+        else
+        {
+            mopTransLateView->showType = XYTranslateModel::COMP_TRAN;
+        }
+    }
+    else
+    {
+        if (mopTransLateView->showType == XYTranslateModel::TRAN_COMP)
+        {
+            mopTransLateView->showType = XYTranslateModel::TRANSLATE;
+        }
+        else
+        {
+            mopTransLateView->showType = XYTranslateModel::TRAN_COMP;
+        }
+    }
 }
 
 bool XYInput::close()
@@ -273,6 +357,7 @@ void XYInput::load()
     {
         mopTransLateView->move(pos_x, pos_y);
     }
+    mopTransLateView->repaint();
     mopTransLateView->show();
 }
 

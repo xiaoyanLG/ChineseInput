@@ -20,6 +20,7 @@ public:
     void nextPage();
     void prePage();
     int  itemCount();
+    XYTranslateItem *getItem(int index);
     QString getData(int index);    // 通过数字键选择输入
 
 public slots:

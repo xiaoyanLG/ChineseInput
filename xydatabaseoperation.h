@@ -18,6 +18,7 @@ public:
     bool openDatabaseFile(const QString &filePath, const QString &passwd = "");
 
     bool createInputTable();
+    bool insertData(XYTranslateItem *item, const QString &table);
     bool insertData(const QList<XYTranslateItem *> &list, const QString &table);
     QList<XYTranslateItem *> findData(const QString &key,
                                       const QString &number,
