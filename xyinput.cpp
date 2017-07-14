@@ -427,3 +427,8 @@ void XYInput::deDuplication(QList<XYTranslateItem *> &items)
     items = temp;
 }
 
+QString XYInput::autoCreateWords(const QString &keyword)
+{
+    return "";
+}
+
