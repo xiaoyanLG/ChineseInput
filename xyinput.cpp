@@ -103,7 +103,11 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
                 }
                 else if (keyEvent->key() >= Qt::Key_A && keyEvent->key() <= Qt::Key_Z)
                 {
-                    if (!moCompleteItem.msComplete.isEmpty() && !mbEnglish)
+                    if (msCurrentKeyWords.split("%\'").size() >= 11) // 最大汉子查询数量
+                    {
+                        return true;
+                    }
+                    else if (!moCompleteItem.msComplete.isEmpty() && !mbEnglish)
                     {
                         int num = 0;
                         msCurrentKeyWords = splitePinyin(msCurrentKeyWords.replace("%\'", "") + keyEvent->text(), num);
@@ -633,7 +637,7 @@ QList<XYTranslateItem *> XYInput::findPossibleMust(const QString &keyword)
                     QStringList singles = singleItem->msTranslate.split(" ", QString::SkipEmptyParts);
                     for (int j = 0; j < singles.size(); ++j)
                     {
-                        if (list.size() > 200)
+                        if (list.size() > 150)
                         {
                             break;
                         }
