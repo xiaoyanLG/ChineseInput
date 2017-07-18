@@ -289,14 +289,15 @@ void XYInput::mslotFindTranslate(const QString &keyword)
         int num = 0;
         splitePY = splitePinyin(keyword, num);
         list = findPossibleMust(splitePY);
+
+        XYTranslateItem *autoTranslate = autoCreateWords(splitePY); // 智能造句
+        if (autoTranslate)
+        {
+            list.prepend(autoTranslate);
+        }
     }
 
     msCurrentKeyWords = splitePY;
-    XYTranslateItem *autoTranslate = autoCreateWords(splitePY); // 智能造句
-    if (autoTranslate)
-    {
-        list.prepend(autoTranslate);
-    }
     mopTransLateView->setData(list, false);
     load();
 }
