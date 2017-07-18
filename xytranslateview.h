@@ -14,8 +14,8 @@ public:
     ~XYTranslateView();
     void appendData(const QList<XYTranslateItem *> &list);
     void prependData(const QList<XYTranslateItem *> &list);
-    void setData(const QList<XYTranslateItem *> &list);
-    void clear();
+    void setData(const QList<XYTranslateItem *> &list, bool del = true);
+    void clear(bool del = false);
     void setFont(const QFont &font);
     void nextPage();
     void prePage();

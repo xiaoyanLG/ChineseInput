@@ -14,6 +14,7 @@ public:
                     int times = 1, // 词频
                     bool stick = false); // 是否置顶
     ~XYTranslateItem();
+    void clear();
 
 private:
     QString  msSource;

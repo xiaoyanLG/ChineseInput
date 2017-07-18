@@ -13,11 +13,11 @@ public:
     ~XYTranslateModel();
     void appendData(const QList<XYTranslateItem *> &list);
     void prependData(const QList<XYTranslateItem *> &list);
-    void setData(const QList<XYTranslateItem *> &list);
-    void delItem(XYTranslateItem *item);
+    void setData(const QList<XYTranslateItem *> &list, bool del = true);
+    void delItem(XYTranslateItem *item, bool del = true);
     XYTranslateItem *stickItem(XYTranslateItem *item);
     XYTranslateItem *getItem(int index);
-    void clear();
+    void clear(bool del = false);
 
     bool haveData(int index) const;
     int  counts();

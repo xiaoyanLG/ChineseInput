@@ -43,7 +43,7 @@ bool XYDatabaseOperation::createDatabaseFile(const QString &filePath, const QStr
         }
     }
 
-    QSqlDatabase db = QSqlDatabase::addDatabase("SQLITECIPHER", "XYInout");
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "XYInout");
     db.setDatabaseName(filePath);
     db.setPassword(passwd);
     db.setConnectOptions("QSQLITE_CREATE_KEY");
@@ -56,7 +56,7 @@ bool XYDatabaseOperation::openDatabaseFile(const QString &filePath, const QStrin
     {
         return true;
     }
-    QSqlDatabase db = QSqlDatabase::addDatabase("SQLITECIPHER", "XYInout");
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "XYInout");
     db.setDatabaseName(filePath);
     db.setPassword(passwd);
     return db.open();

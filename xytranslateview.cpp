@@ -6,7 +6,6 @@
 #include <QApplication>
 #include <QPainter>
 #include <QMouseEvent>
-#include <QDebug>
 
 XYTranslateView::XYTranslateView(QWidget *parent)
     : XYBorderShadowWidget(parent)
@@ -42,16 +41,16 @@ void XYTranslateView::prependData(const QList<XYTranslateItem *> &list)
     mopModel->prependData(list);
 }
 
-void XYTranslateView::setData(const QList<XYTranslateItem *> &list)
+void XYTranslateView::setData(const QList<XYTranslateItem *> &list, bool del)
 {
     miCurrentPage = 0;
-    mopModel->setData(list);
+    mopModel->setData(list, del);
     update();
 }
 
-void XYTranslateView::clear()
+void XYTranslateView::clear(bool del)
 {
-    mopModel->clear();
+    mopModel->clear(del);
 }
 
 void XYTranslateView::setFont(const QFont &font)
@@ -85,7 +84,7 @@ int XYTranslateView::itemCount()
 
 XYTranslateItem *XYTranslateView::getItem(int index)
 {
-    return mopModel->getItem(index - 1);
+    return mopModel->getItem(miCurrentPage * miMaxVisibleItem + index - 1);
 }
 
 QString XYTranslateView::getData(int index)
@@ -178,7 +177,7 @@ void XYTranslateView::delItem()
     if (item)
     {
         XYDB->delItem(item); // 必须在item delete之前调用删除数据库内容
-        mopModel->delItem(item);
+        mopModel->delItem(item, false);
         repaint();
     }
     // 这里还应该删除词库对应的词条

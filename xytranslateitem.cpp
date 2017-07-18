@@ -23,3 +23,14 @@ XYTranslateItem::~XYTranslateItem()
 
 }
 
+void XYTranslateItem::clear()
+{
+    msSource.clear();
+    msTranslate.clear();
+    msComplete.clear();
+    msExtra.clear();
+    miID = -1;
+    miTimes = 1;
+    mbStick = false;
+}
+

@@ -21,15 +21,21 @@ void XYTranslateModel::prependData(const QList<XYTranslateItem *> &list)
     mlistFindTranslates = list + mlistFindTranslates;
 }
 
-void XYTranslateModel::setData(const QList<XYTranslateItem *> &list)
+void XYTranslateModel::setData(const QList<XYTranslateItem *> &list, bool del)
 {
-    clear();
+    if (del)
+    {
+        clear();
+    }
     mlistFindTranslates = list;
 }
 
-void XYTranslateModel::delItem(XYTranslateItem *item)
+void XYTranslateModel::delItem(XYTranslateItem *item, bool del)
 {
-    delete item;
+    if (del)
+    {
+        delete item;
+    }
     mlistFindTranslates.removeAll(item);
 }
 
@@ -66,9 +72,12 @@ XYTranslateItem *XYTranslateModel::getItem(int index)
     }
 }
 
-void XYTranslateModel::clear()
+void XYTranslateModel::clear(bool del)
 {
-    qDeleteAll(mlistFindTranslates);
+    if (del)
+    {
+        qDeleteAll(mlistFindTranslates);
+    }
     mlistFindTranslates.clear();
 }
 

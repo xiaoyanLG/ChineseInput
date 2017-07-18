@@ -70,6 +70,7 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
                 mopTransLateView->prePage();
                 return true;
             case Qt::Key_Shift:
+                clearTemp();
                 setEnglish(!mbEnglish);
                 mslotFindTranslate(mopLineEdit->text());
                 return true;
@@ -80,17 +81,37 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
             case Qt::Key_Space:
                 completeInput(mopTransLateView->getData(1), mopTransLateView->getItem(1));
                 return true;
-            default:
-                break;
-            }
-            if (keyEvent->key() >= Qt::Key_0 && keyEvent->key() <= Qt::Key_9 && keyEvent->modifiers() != Qt::KeypadModifier)
-            {
-                int index = keyEvent->text().toInt();
-                if (index > 0 && index <= mopTransLateView->miMaxVisibleItem && mopTransLateView->itemCount() >= index)
+            case Qt::Key_Backspace:
+                if (!moCompleteItem.msComplete.isEmpty())
                 {
-                    completeInput(mopTransLateView->getData(index), mopTransLateView->getItem(index));
+                    moCompleteItem.clear();
                 }
+                msCurrentKeyWords = msCurrentKeyWords.replace("%\'", "");
+                msCurrentKeyWords.remove(msCurrentKeyWords.size() - 1, 1);
+                mopLineEdit->setText(msCurrentKeyWords);
+                mslotFindTranslate(msCurrentKeyWords);
                 return true;
+            default:
+                if (keyEvent->key() >= Qt::Key_0 && keyEvent->key() <= Qt::Key_9 && keyEvent->modifiers() != Qt::KeypadModifier)
+                {
+                    int index = keyEvent->text().toInt();
+                    if (index > 0 && index <= mopTransLateView->miMaxVisibleItem && mopTransLateView->itemCount() >= index)
+                    {
+                        completeInput(mopTransLateView->getData(index), mopTransLateView->getItem(index));
+                    }
+                    return true;
+                }
+                else if (keyEvent->key() >= Qt::Key_A && keyEvent->key() <= Qt::Key_Z)
+                {
+                    if (!moCompleteItem.msComplete.isEmpty() && !mbEnglish)
+                    {
+                        int num = 0;
+                        msCurrentKeyWords = splitePinyin(msCurrentKeyWords.replace("%\'", "") + keyEvent->text(), num);
+                        completeInput(moCompleteItem.msTranslate, new XYTranslateItem);
+                        return true;
+                    }
+                }
+                break;
             }
         }
         else if (keyEvent->key() != Qt::Key_unknown)
@@ -187,9 +208,21 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
                 ym++;
             }
 
+            QStringList yunmu_copy = yunmu;
+            if (zcs.contains(pinyin.at(cur_index))) // 有些声母韵母不能结合
+            {
+                yunmu_copy.removeAll("in");
+                yunmu_copy.removeAll("ing");
+                yunmu_copy.removeAll("er");
+                yunmu_copy.removeAll("ue");
+            }
+            if (QString("ldg").contains(pinyin.at(cur_index)))
+            {
+                yunmu_copy.append("uo");
+            }
             // 贪心查找 （尽可能长的找到满足的） 注意：这里有可能还有没有判断全的特殊情况
             while ((ym + cur_index) < pinyin.size() &&
-                   (yunmu.contains(pinyin.mid(cur_index + 1 + h, ym - h))
+                   (yunmu_copy.contains(pinyin.mid(cur_index + 1 + h, ym - h))
                     || pinyin.mid(cur_index + 1 + h, ym - h) == "ua"
                     || pinyin.mid(cur_index + 1 + h, ym - h) == "ia"
                     || pinyin.mid(cur_index + 1 + h, ym - h) == "on")) // uan ian ong比较特殊
@@ -238,36 +271,33 @@ void XYInput::mslotFindTranslate(const QString &keyword)
     }
 
     QList<XYTranslateItem *> list;
+    QString splitePY;
+    bool find_new = false;
     if (mbEnglish)
     {
-        list = XYDB->findData(keyword + "%", "", "userEnglishTable");
-        list += XYDB->findData(keyword + "%", "", "englishTable");
+        splitePY = keyword;
+        list = findItemsFromTemp(splitePY, false);
+        if (list.isEmpty())
+        {
+            find_new = true;
+            list = XYDB->findData(splitePY + "%", "", "userEnglishTable");
+            list += XYDB->findData(splitePY + "%", "", "englishTable");
+        }
     }
     else
     {
         int num = 0;
-        QString splitePY = splitePinyin(keyword, num);
-        list = XYDB->findData(splitePY + "%", QString::number(num), "userPingying");
-        if (num == 1)
-        {
-            QList<XYTranslateItem *> single = XYDB->findData(splitePY + "%", "", "singlePingying");
-
-            for (int i = 0; i < single.size(); ++i)
-            {
-                XYTranslateItem *singleItem = single.at(i);
-                QStringList singles = singleItem->msTranslate.split(" ", QString::SkipEmptyParts);
-                for (int j = 0; j < singles.size(); ++j)
-                {
-                    list.append(new XYTranslateItem("singlePingying", singles.at(j), singleItem->msComplete));
-                }
-            }
-            qDeleteAll(single);
-        }
-        list += XYDB->findData(splitePY + "%", QString::number(num), "basePintying");
+        splitePY = splitePinyin(keyword, num);
+        list = findPossibleMust(splitePY);
     }
 
-    deDuplication(list);
-    mopTransLateView->setData(list);
+    msCurrentKeyWords = splitePY;
+    XYTranslateItem *autoTranslate = autoCreateWords(splitePY); // 智能造句
+    if (autoTranslate)
+    {
+        list.prepend(autoTranslate);
+    }
+    mopTransLateView->setData(list, false);
     load();
 }
 
@@ -275,10 +305,50 @@ void XYInput::completeInput(const QString &text, XYTranslateItem *item)
 {
     if (!text.isEmpty()) // 如果为空直接退出
     {
-        qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
-                                                       Qt::Key_unknown,
-                                                       Qt::NoModifier,
-                                                       text));
+        if (!mbEnglish)
+        {
+            if (!moCompleteItem.msComplete.isEmpty())
+            {
+                moCompleteItem.msComplete += "\'";
+            }
+            moCompleteItem.msComplete += item->msComplete;
+            moCompleteItem.msTranslate += item->msTranslate;
+            QStringList all = msCurrentKeyWords.split("%\'", QString::SkipEmptyParts);
+            int com = moCompleteItem.msComplete.split("\'", QString::SkipEmptyParts).size();
+            int remain = all.size() - com;
+            if (remain > 0)
+            {
+                QString key;
+                for (int i = com; i < all.size(); ++i)
+                {
+                    if (!key.isEmpty())
+                    {
+                        key += "%\'";
+                    }
+                    key += all.at(i);
+                }
+                mopTransLateView->setData(findPossibleMust(key), false);
+                mopLineEdit->setText(moCompleteItem.msTranslate + key.replace("%", ""));
+                load();
+                return;
+            }
+            else
+            {
+                moCompleteItem.msExtra = QString::number(moCompleteItem.msTranslate.size());
+                XYDB->insertData(&moCompleteItem, "userPingying");
+                qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
+                                                               Qt::Key_unknown,
+                                                               Qt::NoModifier,
+                                                               moCompleteItem.msTranslate));
+            }
+        }
+        else
+        {
+            qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
+                                                           Qt::Key_unknown,
+                                                           Qt::NoModifier,
+                                                           text));
+        }
         if (item) // 保存用户词库
         {
             item->miTimes += 1;
@@ -341,6 +411,8 @@ bool XYInput::close()
     mopTransLateView->clear();
     mopTransLateView->repaint(); // 清理view,避免显示的时候刷新
     mopTransLateView->close();
+    moCompleteItem.clear();
+    clearTemp();
     return XYBorderShadowWidget::close();
 }
 
@@ -391,7 +463,7 @@ void XYInput::load()
     mopTransLateView->show();
 }
 
-void XYInput::deDuplication(QList<XYTranslateItem *> &items)
+void XYInput::deDuplication(QList<XYTranslateItem *> &items, bool del)
 {
     QList<XYTranslateItem *> temp;
     for (int i = 0; i < items.size(); ++i)
@@ -405,7 +477,10 @@ void XYInput::deDuplication(QList<XYTranslateItem *> &items)
                 if (item->msComplete == temp.at(j)->msComplete)
                 {
                     find = true;
-                    delete item;
+                    if (del)
+                    {
+                        delete item;
+                    }
                     break;
                 }
             }
@@ -414,7 +489,10 @@ void XYInput::deDuplication(QList<XYTranslateItem *> &items)
                 if (item->msTranslate == temp.at(j)->msTranslate)
                 {
                     find = true;
-                    delete item;
+                    if (del)
+                    {
+                        delete item;
+                    }
                     break;
                 }
             }
@@ -427,8 +505,154 @@ void XYInput::deDuplication(QList<XYTranslateItem *> &items)
     items = temp;
 }
 
-QString XYInput::autoCreateWords(const QString &keyword)
+XYTranslateItem *XYInput::autoCreateWords(const QString &keyword)
 {
-    return "";
+    moAutoCompleteItem.clear();
+    QString exists = keyword;
+    auto it = tempItems.find(exists);
+    while(it == tempItems.end() || it.value().isEmpty())
+    {
+        exists = exists.mid(0, exists.lastIndexOf("%\'"));
+        it = tempItems.find(exists);
+    };
+
+    if (exists == keyword)
+    {
+        return NULL;
+    }
+    XYTranslateItem *comAll = &moAutoCompleteItem;
+    comAll->msComplete = it.value().at(0)->msComplete;
+    comAll->msTranslate = it.value().at(0)->msTranslate;
+    QString keys = keyword.mid(exists.size());
+    if (keys.startsWith("%\'"))
+    {
+        keys.remove(0, 2);
+    }
+
+    int k_nums = keys.split("%\'", QString::SkipEmptyParts).size();
+    int f_nums = 0;
+    while (k_nums > f_nums)
+    {
+        for (int i = 0; i < f_nums; ++i)
+        {
+            if (!keys.contains("%\'"))
+            {
+                keys.clear();
+            }
+            else
+            {
+                keys = keys.mid(keys.indexOf("%\'") + 2);
+            }
+        }
+        if (keys.isEmpty())
+        {
+            break;
+        }
+        QList<XYTranslateItem *> list = findPossibleMust(keys);
+        if (!list.isEmpty())
+        {
+            comAll->msComplete += "\'";
+            comAll->msComplete += list.at(0)->msComplete;
+
+            comAll->msTranslate += list.at(0)->msTranslate;
+
+            f_nums = list.at(0)->msComplete.split("\'").size();
+        }
+        else
+        {
+            break;
+        }
+    };
+
+    return &moAutoCompleteItem;
+}
+
+QList<XYTranslateItem *> XYInput::findItemsFromTemp(const QString &keyword, bool force)
+{
+    QList<XYTranslateItem *> list;
+    if (force || tempItems.find(keyword) != tempItems.end())
+    {
+        QString delsuf = keyword.mid(0, keyword.lastIndexOf("%"));
+        auto it = tempItems.begin();
+        while (tempItems.end() != it)
+        {
+            QString last_key = it.key();
+            if (delsuf.startsWith(last_key))
+            {
+                list = it.value() + list;
+            }
+            it++;
+        }
+    }
+
+    return list;
+}
+
+QList<XYTranslateItem *> XYInput::findPossibleMust(const QString &keyword)
+{
+    QStringList words = keyword.split("%\'");
+    QList<XYTranslateItem *> results;
+    QString key;
+    for (int i = 0; i < words.size(); ++i)
+    {
+        if (!key.isEmpty())
+        {
+            key += "%\'";
+        }
+        key += words.at(i);
+
+        QList<XYTranslateItem *> list;
+        auto it = tempItems.find(key);
+        bool find = false;
+        if (it != tempItems.end())
+        {
+            find = true;
+            list = it.value();
+        }
+
+        if (!find)
+        {
+            list = XYDB->findData(key + "%", QString::number(i + 1), "userPingying");
+            if (i == 0)
+            {
+                QList<XYTranslateItem *> single = XYDB->findData(key + "%", "", "singlePingying");
+
+                for (int i = 0; i < single.size(); ++i)
+                {
+                    XYTranslateItem *singleItem = single.at(i);
+                    QStringList singles = singleItem->msTranslate.split(" ", QString::SkipEmptyParts);
+                    for (int j = 0; j < singles.size(); ++j)
+                    {
+                        if (list.size() > 200)
+                        {
+                            break;
+                        }
+                        list.append(new XYTranslateItem("singlePingying", singles.at(j), singleItem->msComplete));
+                    }
+                }
+                qDeleteAll(single);
+            }
+            list += XYDB->findData(key + "%", QString::number(i + 1), "basePintying");
+
+            deDuplication(list, true);
+            tempItems.insert(key, list);
+        }
+        if (!list.isEmpty())
+        {
+            results = list + results;
+        }
+    }
+    return results;
+}
+
+void XYInput::clearTemp()
+{
+    auto it = tempItems.begin();
+    while (tempItems.end() != it)
+    {
+        qDeleteAll(it.value());
+        it++;
+    }
+    tempItems.clear();
 }
 
