@@ -26,7 +26,6 @@ public slots:
 
 private slots:
     void mslotFindTranslate(const QString &keyword); // 查找输入内容对应的词（中英文都通过这个接口）
-    void completeInput(const QString &text, XYTranslateItem *item = NULL);
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event);
@@ -39,6 +38,7 @@ private:
     XYTranslateItem *autoCreateWords(const QString &keyword);  // 自动造词
     QList<XYTranslateItem *> findItemsFromTemp(const QString &keyword, bool force = true);
     QList<XYTranslateItem *> findPossibleMust(const QString &keyword);
+    void completeInput(const QString &text, XYTranslateItem *item = NULL);
     void clearTemp();
 
 private:
@@ -50,7 +50,7 @@ private:
     XYTranslateItem  moCompleteItem;
     XYTranslateItem  moAutoCompleteItem;
     QString          msCurrentKeyWords;
-    QMap<QString, QList<XYTranslateItem *> > tempItems; // 存储一次输入中查询过的词组
+    QMap<QString, QList<XYTranslateItem *> > mmapTempItems; // 存储一次输入中查询过的词组
     XYTranslateView *mopTransLateView;
 
     friend class XYTranslateView;

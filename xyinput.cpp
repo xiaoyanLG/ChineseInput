@@ -519,8 +519,8 @@ XYTranslateItem *XYInput::autoCreateWords(const QString &keyword)
 {
     moAutoCompleteItem.clear();
     QString exists = keyword;
-    auto it = tempItems.find(exists);
-    while(it == tempItems.end() || it.value().isEmpty())
+    auto it = mmapTempItems.find(exists);
+    while(it == mmapTempItems.end() || it.value().isEmpty())
     {
         if (exists.contains("%\'"))
         {
@@ -531,10 +531,10 @@ XYTranslateItem *XYInput::autoCreateWords(const QString &keyword)
             break;
         }
 
-        it = tempItems.find(exists);
+        it = mmapTempItems.find(exists);
     };
 
-    if (exists == keyword || it == tempItems.end() || it.value().isEmpty())
+    if (exists == keyword || it == mmapTempItems.end() || it.value().isEmpty())
     {
         return NULL;
     }
@@ -590,11 +590,11 @@ XYTranslateItem *XYInput::autoCreateWords(const QString &keyword)
 QList<XYTranslateItem *> XYInput::findItemsFromTemp(const QString &keyword, bool force)
 {
     QList<XYTranslateItem *> list;
-    if (force || tempItems.find(keyword) != tempItems.end())
+    if (force || mmapTempItems.find(keyword) != mmapTempItems.end())
     {
         QString delsuf = keyword.mid(0, keyword.lastIndexOf("%"));
-        auto it = tempItems.begin();
-        while (tempItems.end() != it)
+        auto it = mmapTempItems.begin();
+        while (mmapTempItems.end() != it)
         {
             QString last_key = it.key();
             if (delsuf.startsWith(last_key))
@@ -622,9 +622,9 @@ QList<XYTranslateItem *> XYInput::findPossibleMust(const QString &keyword)
         key += words.at(i);
 
         QList<XYTranslateItem *> list;
-        auto it = tempItems.find(key);
+        auto it = mmapTempItems.find(key);
         bool find = false;
-        if (it != tempItems.end())
+        if (it != mmapTempItems.end())
         {
             find = true;
             list = it.value();
@@ -655,7 +655,7 @@ QList<XYTranslateItem *> XYInput::findPossibleMust(const QString &keyword)
             list += XYDB->findData(key + "%", QString::number(i + 1), "basePintying");
 
             deDuplication(list, true);
-            tempItems.insert(key, list);
+            mmapTempItems.insert(key, list);
         }
         if (!list.isEmpty())
         {
@@ -667,12 +667,12 @@ QList<XYTranslateItem *> XYInput::findPossibleMust(const QString &keyword)
 
 void XYInput::clearTemp()
 {
-    auto it = tempItems.begin();
-    while (tempItems.end() != it)
+    auto it = mmapTempItems.begin();
+    while (mmapTempItems.end() != it)
     {
         qDeleteAll(it.value());
         it++;
     }
-    tempItems.clear();
+    mmapTempItems.clear();
 }
 
