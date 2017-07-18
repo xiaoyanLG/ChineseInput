@@ -294,7 +294,7 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
     QSqlQuery query(QSqlDatabase::database("XYInout"));
     bool ok = query.exec(QString("SELECT id, %1, %2, extra, times, stick FROM %3 "
                        "WHERE %4 like \"%5\" AND extra like \"%6\" "
-                       "ORDER BY times DESC LIMIT 0,100;")
+                       "ORDER BY times DESC LIMIT 0,200;")
                .arg(field1)
                .arg(field2)
                .arg(table)

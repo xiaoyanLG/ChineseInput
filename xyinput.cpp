@@ -105,6 +105,7 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
                 {
                     if (msCurrentKeyWords.split("%\'").size() >= 11) // 最大汉子查询数量
                     {
+                        event->accept();
                         return true;
                     }
                     else if (!moCompleteItem.msComplete.isEmpty() && !mbEnglish)
@@ -213,14 +214,14 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
             }
 
             QStringList yunmu_copy = yunmu;
-            if (zcs.contains(pinyin.at(cur_index))) // 有些声母韵母不能结合
+            if (zcs.contains(pinyin.at(cur_index))) // 有些声母韵母不能结合（这里应该还有其他的，遇到一次添加一次）
             {
                 yunmu_copy.removeAll("in");
                 yunmu_copy.removeAll("ing");
                 yunmu_copy.removeAll("er");
                 yunmu_copy.removeAll("ue");
             }
-            if (QString("ldg").contains(pinyin.at(cur_index)))
+            if (QString("zldg").contains(pinyin.at(cur_index))) // 特殊的组合方式（这里应该还有其他的，遇到一次添加一次）
             {
                 yunmu_copy.append("uo");
             }
@@ -310,7 +311,7 @@ void XYInput::completeInput(const QString &text, XYTranslateItem *item)
 {
     if (!text.isEmpty()) // 如果为空直接退出
     {
-        if (!mbEnglish)
+        if (!mbEnglish && item)
         {
             if (!moCompleteItem.msComplete.isEmpty())
             {
@@ -345,6 +346,7 @@ void XYInput::completeInput(const QString &text, XYTranslateItem *item)
                                                                Qt::Key_unknown,
                                                                Qt::NoModifier,
                                                                moCompleteItem.msTranslate));
+                emit complete(moCompleteItem.msTranslate);
             }
         }
         else
@@ -353,8 +355,9 @@ void XYInput::completeInput(const QString &text, XYTranslateItem *item)
                                                            Qt::Key_unknown,
                                                            Qt::NoModifier,
                                                            text));
+            emit complete(text);
         }
-        if (item) // 保存用户词库
+        if (item && !item->msComplete.isEmpty()) // 保存用户词库
         {
             item->miTimes += 1;
             if (item->msSource.toLower().contains("english"))
@@ -367,7 +370,6 @@ void XYInput::completeInput(const QString &text, XYTranslateItem *item)
                 XYDB->insertData(item, "userPingying");
             }
         }
-        emit complete(text);
     }
     close();
 }
@@ -413,10 +415,13 @@ void XYInput::showMoreInfo()
 
 bool XYInput::close()
 {
-    mopTransLateView->clear();
+    mopTransLateView->clear(false);
     mopTransLateView->repaint(); // 清理view,避免显示的时候刷新
     mopTransLateView->close();
     moCompleteItem.clear();
+    moAutoCompleteItem.clear();
+    mopLineEdit->clear();
+    msCurrentKeyWords.clear();
     clearTemp();
     return XYBorderShadowWidget::close();
 }
@@ -525,7 +530,7 @@ XYTranslateItem *XYInput::autoCreateWords(const QString &keyword)
         {
             break;
         }
-        exists = exists.mid(0, exists.lastIndexOf("%\'"));
+
         it = tempItems.find(exists);
     };
 
@@ -562,6 +567,7 @@ XYTranslateItem *XYInput::autoCreateWords(const QString &keyword)
         {
             break;
         }
+
         QList<XYTranslateItem *> list = findPossibleMust(keys);
         if (!list.isEmpty())
         {
@@ -637,7 +643,7 @@ QList<XYTranslateItem *> XYInput::findPossibleMust(const QString &keyword)
                     QStringList singles = singleItem->msTranslate.split(" ", QString::SkipEmptyParts);
                     for (int j = 0; j < singles.size(); ++j)
                     {
-                        if (list.size() > 150)
+                        if (list.size() > 200)
                         {
                             break;
                         }

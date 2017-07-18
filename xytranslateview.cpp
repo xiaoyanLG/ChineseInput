@@ -256,11 +256,7 @@ void XYTranslateView::mouseReleaseEvent(QMouseEvent *event)
         if (index != -1)
         {
             XYInput *input = XYInput::getInstance();
-            qApp->postEvent(input->mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
-                                                           Qt::Key_unknown,
-                                                           Qt::NoModifier,
-                                                           getData(index + 1)));
-            input->close();
+            input->completeInput(getData(index + 1), getItem(index + 1));
         }
     }
 }
