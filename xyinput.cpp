@@ -513,14 +513,23 @@ XYTranslateItem *XYInput::autoCreateWords(const QString &keyword)
     auto it = tempItems.find(exists);
     while(it == tempItems.end() || it.value().isEmpty())
     {
+        if (exists.contains("%\'"))
+        {
+            exists = exists.mid(0, exists.lastIndexOf("%\'"));
+        }
+        else
+        {
+            break;
+        }
         exists = exists.mid(0, exists.lastIndexOf("%\'"));
         it = tempItems.find(exists);
     };
 
-    if (exists == keyword)
+    if (exists == keyword || it == tempItems.end() || it.value().isEmpty())
     {
         return NULL;
     }
+
     XYTranslateItem *comAll = &moAutoCompleteItem;
     comAll->msComplete = it.value().at(0)->msComplete;
     comAll->msTranslate = it.value().at(0)->msTranslate;
