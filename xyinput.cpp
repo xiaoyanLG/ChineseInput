@@ -385,6 +385,7 @@ void XYInput::completeInput(const QString &text, XYTranslateItem *item)
                 mopTransLateView->setData(findPossibleMust(key), false);
                 mopLineEdit->setText(moCompleteItem.msTranslate + key.replace("%", ""));
                 load();
+                saveItem(item);
                 return;
             }
             else
@@ -404,20 +405,8 @@ void XYInput::completeInput(const QString &text, XYTranslateItem *item)
                                                            Qt::Key_unknown,
                                                            Qt::NoModifier,
                                                            text));
+            saveItem(item);
             emit complete(text);
-        }
-        if (item && !item->msComplete.isEmpty()) // 保存用户词库
-        {
-            item->miTimes += 1;
-            if (item->msSource.toLower().contains("english"))
-            {
-                XYDB->insertData(item, "userEnglishTable");
-            }
-            else
-            {
-                item->msExtra = QString::number(item->msTranslate.size());
-                XYDB->insertData(item, "userPingying");
-            }
         }
     }
     close();
@@ -723,6 +712,23 @@ void XYInput::clearTemp()
         it++;
     }
     mmapTempItems.clear();
+}
+
+void XYInput::saveItem(XYTranslateItem *item)
+{
+    if (item && !item->msComplete.isEmpty()) // 保存用户词库
+    {
+        item->miTimes += 1;
+        if (item->msSource.toLower().contains("english"))
+        {
+            XYDB->insertData(item, "userEnglishTable");
+        }
+        else
+        {
+            item->msExtra = QString::number(item->msTranslate.size());
+            XYDB->insertData(item, "userPingying");
+        }
+    }
 }
 
 QStringList XYInput::getYunMuByShengMu(const QChar &shenmu)

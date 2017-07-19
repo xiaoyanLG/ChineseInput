@@ -40,6 +40,7 @@ private:
     QList<XYTranslateItem *> findPossibleMust(const QString &keyword);
     void completeInput(const QString &text, XYTranslateItem *item = NULL);
     void clearTemp();
+    void saveItem(XYTranslateItem *item);
     QStringList getYunMuByShengMu(const QChar &shenmu);
 
 private:
