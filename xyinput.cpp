@@ -390,6 +390,11 @@ void XYInput::completeInput(const QString &text, XYTranslateItem *item)
             }
             else
             {
+                if (moCompleteItem.msTranslate == item->msTranslate)
+                {
+                    moCompleteItem.miTimes = item->miTimes + 1;
+                }
+
                 moCompleteItem.msExtra = QString::number(moCompleteItem.msTranslate.size());
                 XYDB->insertData(&moCompleteItem, "userPingying");
                 qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
