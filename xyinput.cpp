@@ -172,11 +172,9 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
 
 QString XYInput::splitePinyin(const QString &pinyin, int &num)
 {
-    static QString shenmu = "bpmfdtnlgkhjqxzcsywr";
-    static QStringList zcs = QString("z c s").split(" ");
-    static QStringList zhchsh = QString("zh ch sh").split(" ");
-    static QStringList yunmu = QString("a o e i u v ai ei ao ou iu ui ie ue er an en in un ang eng ing ong uan uang ian iang").split(" ");
-    static QStringList yunmuA = QString("a o e ai ei an ang en ao ou").split(" ");
+    QString shenmu = "bpmfdtnlgkhjqxzcsywr";
+    QStringList zcs = QString("z c s").split(" ");
+    QStringList yunmuA = QString("a o e ai ao ou ei er an ang en eng").split(" ");
 
     QString result;
 
@@ -186,7 +184,7 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
         for (int i = 0; i < children.size(); ++i)
         {
             int cur_num = 0;
-            if (!result.isEmpty()) // 每次进入一定的新的字的拼音
+            if (!result.isEmpty() && !result.endsWith("%\'")) // 每次进入一定的新的字的拼音
             {
                 result += "%\'";
             }
@@ -198,10 +196,6 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
     int cur_index = 0;
     while (cur_index < pinyin.size())
     {
-        if (!result.isEmpty()) // 每次进入一定的新的字的拼音
-        {
-            result += "%\'";
-        }
         if (shenmu.contains(pinyin.at(cur_index))) // 是声母
         {
             int ym = 1;
@@ -213,50 +207,104 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
                 ym++;
             }
 
-            QStringList yunmu_copy = yunmu;
-            if (zcs.contains(pinyin.at(cur_index))) // 有些声母韵母不能结合（这里应该还有其他的，遇到一次添加一次）
+            QStringList yunmu = getYunMuByShengMu(pinyin.at(cur_index));
+
+            // 贪心查找 （尽可能长的找到满足的）
+            while ( (ym + cur_index) < pinyin.size() )
             {
-                yunmu_copy.removeAll("in");
-                yunmu_copy.removeAll("ing");
-                yunmu_copy.removeAll("er");
-                yunmu_copy.removeAll("ue");
-            }
-            if (QString("zldg").contains(pinyin.at(cur_index))) // 特殊的组合方式（这里应该还有其他的，遇到一次添加一次）
-            {
-                yunmu_copy.append("uo");
-            }
-            // 贪心查找 （尽可能长的找到满足的） 注意：这里有可能还有没有判断全的特殊情况
-            while ((ym + cur_index) < pinyin.size() &&
-                   (yunmu_copy.contains(pinyin.mid(cur_index + 1 + h, ym - h))
-                    || pinyin.mid(cur_index + 1 + h, ym - h) == "ua"
-                    || pinyin.mid(cur_index + 1 + h, ym - h) == "ia"
-                    || pinyin.mid(cur_index + 1 + h, ym - h) == "on")) // uan ian ong比较特殊
-            {
+                bool find = false;
+                for (int i = 0; i < yunmu.size(); ++i)
+                {
+                    QString c_py = yunmu.at(i);
+                    if (c_py.startsWith(pinyin.mid(cur_index + 1 + h, ym - h)))
+                    {
+                        find = true;
+                    }
+                }
+                if (!find)
+                {
+                    if (ym > h)
+                    {
+                        ym--;
+                    }
+                    break;
+                }
                 ym++;
             }
 
-            result += pinyin.mid(cur_index, ym);
-            cur_index += ym - 1;
+            if (!result.isEmpty() && !result.endsWith("%\'"))
+            {
+                result += "%\'";
+            }
+            result += pinyin.mid(cur_index, ym + 1);
+            cur_index += ym;
         }
         else
         {
-            // 处理独成一字的韵母
+            if (result.endsWith("g") // 如果是特殊的几个韵母结束的，到这里应该截取下来，重新匹配
+                    || result.endsWith("n")
+                    || result.endsWith("r") )
+            {
+                int last_index = result.lastIndexOf("%\'");
+                QString last;
+                if (last_index != -1)
+                {
+                    last = result.mid(last_index + 2);
+                }
+                else
+                {
+                    last = result;
+                }
+                last.remove(last.size() - 1, 1);
+                if (getYunMuByShengMu(last.at(0)).contains(last.mid(1))) // 判断截取之后是否是可以组合的拼音
+                {
+                    result.remove(result.size() - 1, 1);
+                    cur_index -= 1;
+                    continue;
+                }
+            }
+
             if (yunmuA.contains(pinyin.at(cur_index)))
             {
-                int ym = 1;
-                while ((ym + cur_index) < pinyin.size()
-                       && yunmuA.contains(pinyin.mid(cur_index, ym + 1)))
+                int ym = 0;
+                while ((ym + cur_index) < pinyin.size())
                 {
-                    ym++;
+                    bool find = false;
+                    for (int i = 0; i < yunmuA.size(); ++i)
+                    {
+                        QString c_py = yunmuA.at(i);
+                        if (c_py.startsWith(pinyin.mid(cur_index, ym + 1)))
+                        {
+                            find = true;
+                        }
+                    }
+                    if (find)
+                    {
+                        ym++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (!result.isEmpty() && !result.endsWith("%\'"))
+                {
+                    result += "%\'";
                 }
                 result += pinyin.mid(cur_index, ym);
                 cur_index += ym - 1;
             }
             else
             {
+                if (!result.isEmpty() && !result.endsWith("%\'"))
+                {
+                    result += "%\'";
+                }
                 result += pinyin.at(cur_index);
             }
         }
+
         num++;
         cur_index++;
     }
@@ -264,6 +312,7 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
     {
         num++;
     }
+
     return result;
 }
 
@@ -674,5 +723,67 @@ void XYInput::clearTemp()
         it++;
     }
     mmapTempItems.clear();
+}
+
+QStringList XYInput::getYunMuByShengMu(const QChar &shenmu)
+{
+    QStringList yunmu;
+    switch (shenmu.toLatin1()) // 单独为每一个声母指定可匹配的韵母
+    {
+    case 'b':
+        yunmu = QString("a o ai ei ao an en ang eng i ie iao ian in ing u").split(" ", QString::SkipEmptyParts);
+        break;
+    case 'p':
+        yunmu = QString("a o ai ei ao ou an en ang eng i ie iao ian in ing u").split(" ", QString::SkipEmptyParts);
+        break;
+    case 'm':
+        yunmu = QString("a e o ai ei ao an en ang eng i ie iao iu ian in ing u").split(" ", QString::SkipEmptyParts);
+        break;
+    case 'f':
+        yunmu = QString("a o ei ou an en ang eng u").split(" ", QString::SkipEmptyParts);
+        break;
+    case 'd':
+        yunmu = QString("a o ai ei ao ou an en ang eng i ia ie iao ian iu ian ing u uo ui uan un ong").split(" ", QString::SkipEmptyParts);
+        break;
+    case 't':
+        yunmu = QString("a e ai ei ao ou an ang eng i ie iao ian ing u uo ui uan un ong").split(" ", QString::SkipEmptyParts);
+        break;
+    case 'n':
+    case 'l':
+        yunmu = QString("a e o ai ei ao ou an en ang eng i ia ie iao ian iu ian in ing u uo ui uan un ong v ve").split(" ", QString::SkipEmptyParts);
+        break;
+    case 'g':
+    case 'k':
+    case 'h':
+        yunmu = QString("a e ai ei ao ou an en ang eng u ua uo uai ui uan un uang ong").split(" ", QString::SkipEmptyParts);
+        break;
+    case 'j':
+    case 'q':
+    case 'x':
+        yunmu = QString("i ia ie iao iu ian in iang ing v u ue ve van uan un vn iong").split(" ", QString::SkipEmptyParts);
+        break;
+    case 'z':
+        yunmu = QString("a e i ai ei ao ou an en ang eng u ua uo uai ui uan un uang ong").split(" ", QString::SkipEmptyParts);
+        break;
+    case 'c':
+        yunmu = QString("a e i ai ao ou an en ang eng u ua uo uai ui uan un uang ong").split(" ", QString::SkipEmptyParts);
+        break;
+    case 's':
+        yunmu = QString("a e i ai ei ao ou an en ang eng u ua uo uai ui uan un uang ong").split(" ", QString::SkipEmptyParts);
+        break;
+    case 'r':
+        yunmu = QString("e i ao ou an en ang eng u ua uo ui uan un uang ong").split(" ", QString::SkipEmptyParts);
+        break;
+    case 'y':
+        yunmu = QString("a e i o ao ou an in ang ing u ue uan un ong").split(" ", QString::SkipEmptyParts);
+        break;
+    case 'w':
+        yunmu = QString("a o ai ei an en ang eng u").split(" ", QString::SkipEmptyParts);
+        break;
+    default:
+        break;
+    }
+
+    return yunmu;
 }
 
