@@ -37,7 +37,7 @@ private:
     void deDuplication(QList<XYTranslateItem *> &items, bool del = true); // 删除重复的字词
     XYTranslateItem *autoCreateWords(const QString &keyword);  // 自动造词
     QList<XYTranslateItem *> findItemsFromTemp(const QString &keyword, bool force = true);
-    QList<XYTranslateItem *> findPossibleMust(const QString &keyword);
+    QList<XYTranslateItem *> findPossibleMust(const QString &keyword, int max = 200);
     void completeInput(const QString &text, XYTranslateItem *item = NULL);
     void clearTemp();
     void saveItem(XYTranslateItem *item);

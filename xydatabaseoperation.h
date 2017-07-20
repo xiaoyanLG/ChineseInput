@@ -23,10 +23,12 @@ public:
     bool delItem(XYTranslateItem *item);
     QList<XYTranslateItem *> findData(const QString &key,
                                       const QString &number,
-                                      const QString &table);
+                                      const QString &table,
+                                      bool *haveFind = NULL, int max = 200);
 
 private:
     static XYDatabaseOperation *DB;
+
 };
 
 #define XYDB XYDatabaseOperation::getInstance()

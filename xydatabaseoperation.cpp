@@ -5,6 +5,7 @@
 #include <QSqlError>
 #include <QFile>
 #include <QVariant>
+
 XYDatabaseOperation *XYDatabaseOperation::DB = NULL;
 XYDatabaseOperation *XYDatabaseOperation::getInstance()
 {
@@ -278,8 +279,20 @@ bool XYDatabaseOperation::delItem(XYTranslateItem *item)
     return ok;
 }
 
-QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const QString &number, const QString &table)
+QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const QString &number, const QString &table, bool *haveFind, int max)
 {
+    static bool comein = false;
+    QList<XYTranslateItem *> list;
+    *haveFind = false;
+    if (comein)
+    {
+        return list;
+    }
+    else
+    {
+        comein = true;
+    }
+
     QString field1, field2;
     if (table.toLower().contains("english"))
     {
@@ -294,19 +307,20 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
     QSqlQuery query(QSqlDatabase::database("XYInout"));
     bool ok = query.exec(QString("SELECT id, %1, %2, extra, times, stick FROM %3 "
                        "WHERE %4 like \"%5\" AND extra like \"%6\" "
-                       "ORDER BY times DESC LIMIT 0,200;")
+                       "ORDER BY times DESC LIMIT 0,%7;")
                .arg(field1)
                .arg(field2)
                .arg(table)
                .arg(field1)
                .arg(key)
-               .arg(number));
+               .arg(number)
+               .arg(max));
 
     if (!ok)
     {
         qDebug("error: %s", query.lastError().text().toUtf8().data());
     }
-    QList<XYTranslateItem *> list;
+
     while (query.next())
     {
         list.append(new XYTranslateItem(table,
@@ -317,6 +331,9 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
                                         query.value(4).toInt(),
                                         query.value(5).toBool()));
     }
+
+    comein = false;
+    *haveFind = true;
     return list;
 }
 

@@ -65,7 +65,7 @@ void XYTranslateView::nextPage()
     {
         miCurrentPage++;
     }
-    repaint();
+    update();
 }
 
 void XYTranslateView::prePage()
@@ -74,7 +74,7 @@ void XYTranslateView::prePage()
     {
         miCurrentPage--;
     }
-    repaint();
+    update();
 }
 
 int XYTranslateView::itemCount()
@@ -163,7 +163,7 @@ void XYTranslateView::stickItem()
             XYDB->insertData(lastStickItem, "userPingying");
         }
         miCurrentPage = 0;
-        repaint();
+        update();
     }
 
     // 这里还应该改变词库对应的词条，置顶属性
@@ -178,7 +178,7 @@ void XYTranslateView::delItem()
     {
         XYDB->delItem(item); // 必须在item delete之前调用删除数据库内容
         mopModel->delItem(item, false);
-        repaint();
+        update();
     }
     // 这里还应该删除词库对应的词条
 }

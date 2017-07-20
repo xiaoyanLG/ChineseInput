@@ -23,10 +23,7 @@ void XYTranslateModel::prependData(const QList<XYTranslateItem *> &list)
 
 void XYTranslateModel::setData(const QList<XYTranslateItem *> &list, bool del)
 {
-    if (del)
-    {
-        clear();
-    }
+    clear(del);
     mlistFindTranslates = list;
 }
 

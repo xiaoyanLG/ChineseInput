@@ -112,14 +112,15 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
                     {
                         int num = 0;
                         msCurrentKeyWords = splitePinyin(msCurrentKeyWords.replace("%\'", "") + keyEvent->text(), num);
-                        completeInput(moCompleteItem.msTranslate, new XYTranslateItem);
+                        XYTranslateItem item;
+                        completeInput(moCompleteItem.msTranslate, &item);
                         return true;
                     }
                 }
                 break;
             }
         }
-        else if (keyEvent->key() != Qt::Key_unknown)
+        else if (keyEvent->key() != Qt::Key_unknown && keyEvent->modifiers() != Qt::ControlModifier)
         {
             mopLatestWidget = static_cast<QWidget *>(obj);
             XYInput *input = XYInput::getInstance();
@@ -129,7 +130,7 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
                         || keyEvent->key() == Qt::Key_Shift)
                 {
                     input->mopLineEdit->clear();
-                    input->mopTransLateView->clear();
+                    input->mopTransLateView->clear(false);
                     if (!keyEvent->text().isEmpty())
                     {
                         input->show();
@@ -459,7 +460,7 @@ void XYInput::showMoreInfo()
 bool XYInput::close()
 {
     mopTransLateView->clear(false);
-    mopTransLateView->repaint(); // 清理view,避免显示的时候刷新
+    mopTransLateView->update(); // 清理view,避免显示的时候刷新
     mopTransLateView->close();
     moCompleteItem.clear();
     moAutoCompleteItem.clear();
@@ -512,8 +513,11 @@ void XYInput::load()
     {
         mopTransLateView->move(pos_x, pos_y);
     }
-    mopTransLateView->repaint();
-    mopTransLateView->show();
+    if (isVisible())
+    {
+        mopTransLateView->repaint();
+        mopTransLateView->show();
+    }
 }
 
 void XYInput::deDuplication(QList<XYTranslateItem *> &items, bool del)
@@ -651,7 +655,7 @@ QList<XYTranslateItem *> XYInput::findItemsFromTemp(const QString &keyword, bool
     return list;
 }
 
-QList<XYTranslateItem *> XYInput::findPossibleMust(const QString &keyword)
+QList<XYTranslateItem *> XYInput::findPossibleMust(const QString &keyword, int max)
 {
     QStringList words = keyword.split("%\'");
     QList<XYTranslateItem *> results;
@@ -675,10 +679,11 @@ QList<XYTranslateItem *> XYInput::findPossibleMust(const QString &keyword)
 
         if (!find)
         {
-            list = XYDB->findData(key + "%", QString::number(i + 1), "userPingying");
+            bool haveFind = false;
+            list = XYDB->findData(key + "%", QString::number(i + 1), "userPingying", &haveFind, max);
             if (i == 0)
             {
-                QList<XYTranslateItem *> single = XYDB->findData(key + "%", "", "singlePingying");
+                QList<XYTranslateItem *> single = XYDB->findData(key + "%", "", "singlePingying", &haveFind, max);
 
                 for (int i = 0; i < single.size(); ++i)
                 {
@@ -695,10 +700,13 @@ QList<XYTranslateItem *> XYInput::findPossibleMust(const QString &keyword)
                 }
                 qDeleteAll(single);
             }
-            list += XYDB->findData(key + "%", QString::number(i + 1), "basePintying");
+            list += XYDB->findData(key + "%", QString::number(i + 1), "basePintying", &haveFind, max);
 
             deDuplication(list, true);
-            mmapTempItems.insert(key, list);
+            if (haveFind)
+            {
+                mmapTempItems.insert(key, list);
+            }
         }
         if (!list.isEmpty())
         {
