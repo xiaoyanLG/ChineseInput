@@ -82,17 +82,20 @@ bool XYDatabaseOperation::createInputTable()
     }
 
     // 基础表
-    ok = query.exec("CREATE TABLE IF NOT EXISTS  basePintying ("
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                    "pingying VARCHAR NOT NULL,"
-                    "chinese VARCHAR NOT NULL,"
-                    "extra VARCHAR NULL,"
-                    "times INTEGER NOT NULL,"
-                    "stick BOOL NULL);");
-    if (!ok)
+    for (int i = 'A'; i <= 'Z'; ++i)
     {
-        qDebug("error: %s", query.lastError().text().toUtf8().data());
-        return false;
+        ok = query.exec(QString("CREATE TABLE IF NOT EXISTS  basePintying_%1 ("
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                        "pingying VARCHAR NOT NULL,"
+                        "chinese VARCHAR NOT NULL,"
+                        "extra VARCHAR NULL,"
+                        "times INTEGER NOT NULL,"
+                        "stick BOOL NULL);").arg(QChar(i)));
+        if (!ok)
+        {
+            qDebug("error: %s", query.lastError().text().toUtf8().data());
+            return false;
+        }
     }
 
     // 用户表
@@ -293,6 +296,11 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
         comein = true;
     }
 
+    QString table_fact = table;
+    if (table_fact == "basePintying" && !key.isEmpty())
+    {
+        table_fact += QString("_%1").arg(key.at(0).toUpper());
+    }
     QString field1, field2;
     if (table.toLower().contains("english"))
     {
@@ -310,7 +318,7 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
                        "ORDER BY times DESC LIMIT 0,%7;")
                .arg(field1)
                .arg(field2)
-               .arg(table)
+               .arg(table_fact)
                .arg(field1)
                .arg(key)
                .arg(number)
