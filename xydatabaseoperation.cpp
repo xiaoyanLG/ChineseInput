@@ -286,7 +286,10 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
 {
     static bool comein = false;
     QList<XYTranslateItem *> list;
-    *haveFind = false;
+    if (haveFind)
+    {
+        *haveFind = false;
+    }
     if (comein)
     {
         return list;
@@ -341,7 +344,10 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
     }
 
     comein = false;
-    *haveFind = true;
+    if (haveFind)
+    {
+        *haveFind = true;
+    }
     return list;
 }
 

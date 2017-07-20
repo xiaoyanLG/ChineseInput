@@ -7,8 +7,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    XYInput::getInstance()->initInputBase("I:/QtProject/ChineseInput/chineseBase/chinese.db");
-//    XYInput::getInstance()->initInputBase("./chineseBase/chinese.db");
+//    XYInput::getInstance()->initInputBase("I:/QtProject/ChineseInput/chineseBase/chinese.db");
+    XYInput::getInstance()->initInputBase("chineseBase/chinese.db");
     ui->textEdit->installEventFilter(XYInput::getInstance());
     ui->lineEdit->installEventFilter(XYInput::getInstance());
 }
