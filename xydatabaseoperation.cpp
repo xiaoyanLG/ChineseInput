@@ -302,7 +302,19 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
     QString table_fact = table;
     if (table_fact == "basePintying" && !key.isEmpty())
     {
-        table_fact += QString("_%1").arg(key.at(0).toUpper());
+        if (!key.at(0).isLetter() || number.toInt() > 6) // 如果都不以字母开头或者超过6个字查找，肯定找不到，直接返回
+        {
+            comein = false;
+            if (haveFind)
+            {
+                *haveFind = true;
+            }
+            return list;
+        }
+        else
+        {
+            table_fact += QString("_%1").arg(key.at(0).toUpper());
+        }
     }
     QString field1, field2;
     if (table.toLower().contains("english"))
