@@ -181,6 +181,7 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
 
     if (pinyin.contains("\'"))
     {
+        bool endfgf = pinyin.endsWith("\'");
         QStringList children = pinyin.split("\'", QString::SkipEmptyParts);
         for (int i = 0; i < children.size(); ++i)
         {
@@ -191,6 +192,10 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
             }
             result += splitePinyin(children.at(i), cur_num);
             num += cur_num;
+        }
+        if (endfgf)
+        {
+            result += "\'";
         }
         return result;
     }
