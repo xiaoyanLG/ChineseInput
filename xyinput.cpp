@@ -343,6 +343,8 @@ void XYInput::mslotFindTranslate(const QString &keyword)
     {
         int num = 0;
         splitePY = splitePinyin(keyword, num);
+        mopLineEdit->setText(splitePY.replace("%\'", "\'"));
+        splitePY.replace("\'", "%\'");
         list = findPossibleMust(splitePY);
 
         XYTranslateItem *autoTranslate = autoCreateWords(splitePY); // 智能造句
@@ -395,6 +397,10 @@ void XYInput::completeInput(const QString &text, XYTranslateItem *item)
                 {
                     moCompleteItem.miTimes = item->miTimes + 1;
                 }
+                else
+                {
+                    saveItem(item);
+                }
 
                 moCompleteItem.msExtra = QString::number(moCompleteItem.msTranslate.size());
                 XYDB->insertData(&moCompleteItem, "userPingying");
@@ -423,6 +429,10 @@ void XYInput::setEnglish(bool english)
     mbEnglish = english;
     if (mbEnglish)
     {
+        QString s_cur = mopLineEdit->text(); // 如果是英语查询，去掉分隔符
+        s_cur.replace("\'", "");
+        s_cur.replace("%", "");
+        mopLineEdit->setText(s_cur);
         mopTransLateView->showType = XYTranslateModel::COMPLETE;
     }
     else
