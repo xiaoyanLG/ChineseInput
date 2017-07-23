@@ -346,7 +346,7 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
 
     while (query.next())
     {
-        list.append(new XYTranslateItem(table,
+        list.append(new XYTranslateItem(table_fact,
                                         query.value(2).toString(),
                                         query.value(1).toString(),
                                         query.value(3).toString(),
