@@ -53,11 +53,11 @@ void XYMenuStyle::paintEvent(QPaintEvent *event)
     // 画底色
     if (parent->mopCurrentChecked == this)
     {
-        painter.setBrush(QColor("#85124190"));
+        painter.setBrush(QColor(85, 12, 41, 90));
     }
     else
     {
-        painter.setBrush(QColor("#2871d590"));
+        painter.setBrush(QColor(28, 71, 0xd5, 90));
     }
     painter.drawRect(this->rect());
 
@@ -177,7 +177,11 @@ void XYMenuStyle::mouseReleaseEvent(QMouseEvent *event)
                 ((XYMenu *)parentWidget())->raise();
             }
         }
+#if QT_VERSION >= 0x050000
         emit mopAction->triggered(mopAction->isChecked());
+#elif
+        mopAction->trigger();
+#endif
     }
     else
     {

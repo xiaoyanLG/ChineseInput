@@ -12,8 +12,10 @@ XYTranslateView::XYTranslateView(QWidget *parent)
 {
     setWindowFlags(Qt::FramelessWindowHint
                    | Qt::WindowStaysOnTopHint
-                   | Qt::Tool
-                   | Qt::WindowDoesNotAcceptFocus);
+                   | Qt::Tool);
+#if QT_VERSION >= 0x050000
+    this->setWindowFlags(this->windowFlags() | Qt::WindowDoesNotAcceptFocus);
+#endif
     this->setAttribute(Qt::WA_TranslucentBackground);
 
     mopMenu = NULL;
@@ -237,9 +239,9 @@ void XYTranslateView::mouseReleaseEvent(QMouseEvent *event)
         {
             XYTranslateItem *item = contentsItem(event->pos() + QPoint(0, 10));
             XYMenu menu;
-            QAction *del = new QAction(QString(QStringLiteral("删除 \"%1\"")).arg(getData(index + 1)), &menu);
+            QAction *del = new QAction(QString::fromStdWString(L"删除 \"%1\"").arg(getData(index + 1)), &menu);
             del->setData((long long)item);
-            QAction *fixed = new QAction(QString(QStringLiteral("置顶 \"%1\"")).arg(getData(index + 1)), &menu);
+            QAction *fixed = new QAction(QString::fromStdWString(L"置顶 \"%1\"").arg(getData(index + 1)), &menu);
             fixed->setData((long long)item);
             connect(del, SIGNAL(triggered()), this, SLOT(delItem()));
             connect(fixed, SIGNAL(triggered()), this, SLOT(stickItem()));

@@ -23,8 +23,10 @@ XYInput::XYInput(QWidget *parent)
 {
     setWindowFlags(Qt::FramelessWindowHint
                    | Qt::WindowStaysOnTopHint
-                   | Qt::Tool
-                   | Qt::WindowDoesNotAcceptFocus);
+                   | Qt::Tool);
+#if QT_VERSION >= 0x050000
+    this->setWindowFlags(this->windowFlags() | Qt::WindowDoesNotAcceptFocus);
+#endif
     this->setAttribute(Qt::WA_TranslucentBackground);
 
     mbEnglish = false;
