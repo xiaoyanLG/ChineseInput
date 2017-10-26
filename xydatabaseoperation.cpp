@@ -44,7 +44,7 @@ bool XYDatabaseOperation::createDatabaseFile(const QString &filePath, const QStr
         }
     }
 
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "XYInout");
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "XYInput");
     db.setDatabaseName(filePath);
     db.setPassword(passwd);
     db.setConnectOptions("QSQLITE_CREATE_KEY");
@@ -53,11 +53,11 @@ bool XYDatabaseOperation::createDatabaseFile(const QString &filePath, const QStr
 
 bool XYDatabaseOperation::openDatabaseFile(const QString &filePath, const QString &passwd)
 {
-    if (QSqlDatabase::database("XYInout").isOpen())
+    if (QSqlDatabase::database("XYInput").isOpen())
     {
         return true;
     }
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "XYInout");
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "XYInput");
     db.setDatabaseName(filePath);
     db.setPassword(passwd);
     return db.open();
@@ -65,7 +65,7 @@ bool XYDatabaseOperation::openDatabaseFile(const QString &filePath, const QStrin
 
 bool XYDatabaseOperation::createInputTable()
 {
-    QSqlQuery query(QSqlDatabase::database("XYInout"));
+    QSqlQuery query(QSqlDatabase::database("XYInput"));
 
     // 单字表
     bool ok = query.exec("CREATE TABLE IF NOT EXISTS  singlePingying ("
@@ -156,7 +156,7 @@ bool XYDatabaseOperation::insertData(XYTranslateItem *item, const QString &table
         field2 = "chinese";
     }
 
-    QSqlQuery query(QSqlDatabase::database("XYInout"));
+    QSqlQuery query(QSqlDatabase::database("XYInput"));
     bool ok = true;
 
     // 先查找词组是否存在
@@ -229,8 +229,8 @@ bool XYDatabaseOperation::insertData(const QList<XYTranslateItem *> &list, const
         field1 = "pingying";
         field2 = "chinese";
     }
-    QSqlDatabase::database("XYInout").transaction();   //开始一个事务
-    QSqlQuery query(QSqlDatabase::database("XYInout"));
+    QSqlDatabase::database("XYInput").transaction();   //开始一个事务
+    QSqlQuery query(QSqlDatabase::database("XYInput"));
     bool ok = true;
     for (int i = 0; i < list.size(); ++i)
     {
@@ -255,18 +255,18 @@ bool XYDatabaseOperation::insertData(const QList<XYTranslateItem *> &list, const
     }
     if (ok)
     {
-        QSqlDatabase::database("XYInout").commit();
+        QSqlDatabase::database("XYInput").commit();
     }
     else
     {
-        QSqlDatabase::database("XYInout").rollback();
+        QSqlDatabase::database("XYInput").rollback();
     }
     return ok;
 }
 
 bool XYDatabaseOperation::delItem(XYTranslateItem *item)
 {
-    QSqlQuery query(QSqlDatabase::database("XYInout"));
+    QSqlQuery query(QSqlDatabase::database("XYInput"));
     if (item->msSource == "singlePingying") // 理论上基础的几个表内容都不能删除，这里只不准删除单字的表
     {
         qDebug("Can't delete item in singlePingying!");
@@ -327,7 +327,7 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
         field1 = "pingying";
         field2 = "chinese";
     }
-    QSqlQuery query(QSqlDatabase::database("XYInout"));
+    QSqlQuery query(QSqlDatabase::database("XYInput"));
     bool ok = query.exec(QString("SELECT id, %1, %2, extra, times, stick FROM %3 "
                        "WHERE %4 like \"%5\" AND extra like \"%6\" "
                        "ORDER BY times DESC LIMIT 0,%7;")
