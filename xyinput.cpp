@@ -487,6 +487,8 @@ bool XYInput::close()
 
 void XYInput::show()
 {
+    QWidget::show();
+
     QDesktopWidget *desk = qApp->desktop();
     int pos_x, pos_y;
     pos_x = QCursor::pos().x();
@@ -501,7 +503,6 @@ void XYInput::show()
     }
 
     this->move(pos_x, pos_y);
-    QWidget::show();
 }
 
 void XYInput::load()
@@ -511,6 +512,13 @@ void XYInput::load()
         mopTransLateView->close();
         return;
     }
+
+    if (isVisible())
+    {
+        mopTransLateView->repaint();
+        mopTransLateView->show();
+    }
+
     QDesktopWidget *desk = qApp->desktop();
     int pos_x, pos_y;
     pos_x = this->pos().x();
@@ -527,11 +535,6 @@ void XYInput::load()
     if (mopTransLateView->pos() != QPoint(pos_x, pos_y))
     {
         mopTransLateView->move(pos_x, pos_y);
-    }
-    if (isVisible())
-    {
-        mopTransLateView->repaint();
-        mopTransLateView->show();
     }
 }
 
