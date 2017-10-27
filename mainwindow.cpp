@@ -1,6 +1,7 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "xyinput.h"
+#include "xyvirtualkeyboard.h"
 #include <QApplication>
 #include <QDir>
 
@@ -14,6 +15,9 @@ MainWindow::MainWindow(QWidget *parent) :
     XYInput::getInstance()->initInputBase("chineseBase/chinese.db");
     ui->textEdit->installEventFilter(XYInput::getInstance());
     ui->lineEdit->installEventFilter(XYInput::getInstance());
+
+    XYVirtualKeyboard *bo = new XYVirtualKeyboard;
+    bo->show();
 }
 
 MainWindow::~MainWindow()

@@ -22,7 +22,9 @@ SOURCES += main.cpp\
     xymenu.cpp \
     xymenustyle.cpp \
     xytooltips.cpp \
-    xydatabaseoperation.cpp
+    xydatabaseoperation.cpp \
+    xyvirtualkeyboard.cpp \
+    xypushbutton.cpp
 
 HEADERS  += mainwindow.h \
     xyinput.h \
@@ -33,7 +35,9 @@ HEADERS  += mainwindow.h \
     xymenu.h \
     xymenustyle.h \
     xytooltips.h \
-    xydatabaseoperation.h
+    xydatabaseoperation.h \
+    xyvirtualkeyboard.h \
+    xypushbutton.h
 
 FORMS    += mainwindow.ui
 
