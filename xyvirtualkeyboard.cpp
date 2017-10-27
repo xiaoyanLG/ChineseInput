@@ -9,7 +9,7 @@
 
 XYVirtualKeyboard *XYVirtualKeyboard::instance = NULL;
 XYVirtualKeyboard::XYVirtualKeyboard(QWidget *parent)
-    : QWidget(parent)
+    : QWidget(parent), mbLeftMousePressed(false)
 {
     this->setWindowFlags(Qt::FramelessWindowHint
                    | Qt::WindowStaysOnTopHint
