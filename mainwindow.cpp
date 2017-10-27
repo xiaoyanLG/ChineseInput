@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->textEdit->installEventFilter(XYInput::getInstance());
     ui->lineEdit->installEventFilter(XYInput::getInstance());
 
-    XYVirtualKeyboard *bo = new XYVirtualKeyboard;
+    XYVirtualKeyboard *bo = XYVirtualKeyboard::getInstance();
     bo->show();
 }
 
