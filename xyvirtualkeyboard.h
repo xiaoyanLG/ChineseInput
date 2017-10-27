@@ -3,6 +3,7 @@
 
 #include <QWidget>
 
+class XYPushButton;
 class XYVirtualKeyboard : public QWidget
 {
     Q_OBJECT
@@ -13,6 +14,9 @@ public:
 public slots:
     void enlarge();
     void shrink();
+    void show();
+    void showMain();
+    void showSmall();
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event);
@@ -28,6 +32,10 @@ private:
     static XYVirtualKeyboard *instance;
     explicit XYVirtualKeyboard(QWidget *parent = 0);
     QWidget *curWidget;
+
+    XYPushButton *smallNumLockBtn;
+    QWidget *mainWidget;
+    QWidget *smallWidget;
 
 };
 

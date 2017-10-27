@@ -5,6 +5,7 @@
 #include <QVBoxLayout>
 #include <QGridLayout>
 #include <QMouseEvent>
+#include <QLineEdit>
 #include <QDebug>
 
 XYVirtualKeyboard *XYVirtualKeyboard::instance = NULL;
@@ -183,10 +184,13 @@ XYVirtualKeyboard::XYVirtualKeyboard(QWidget *parent)
     layout_main->addLayout(layout_4);
     layout_main->addLayout(layout_5);
 
+    mainWidget = new QWidget;
+    layout_main->setContentsMargins(2, 2, 2, 2);
+    mainWidget->setLayout(layout_main);
 
     // 小键盘区域
-    XYPushButton *small_numLock = new XYPushButton("Num\nLock", Qt::Key_NumLock, -1, true);
-    small_numLock->setCheckable(true);
+    smallNumLockBtn = new XYPushButton("Num\nLock", Qt::Key_NumLock, -1, true);
+    smallNumLockBtn->setCheckable(true);
     XYPushButton *small_slash = new XYPushButton("/", Qt::Key_Slash, -1, true);
     XYPushButton *small_asterisk = new XYPushButton("*", Qt::Key_Asterisk, -1, true);
     XYPushButton *small_sub = new XYPushButton("-", Qt::Key_Minus, -1, true);
@@ -207,7 +211,7 @@ XYVirtualKeyboard::XYVirtualKeyboard(QWidget *parent)
     XYPushButton *small_point = new XYPushButton(".", Qt::Key_Period, -1, true);
 
     QGridLayout *layout_small = new QGridLayout;
-    layout_small->addWidget(small_numLock, 0, 0, 1, 1);
+    layout_small->addWidget(smallNumLockBtn, 0, 0, 1, 1);
     layout_small->addWidget(small_slash, 0, 1, 1, 1);
     layout_small->addWidget(small_asterisk, 0, 2, 1, 1);
     layout_small->addWidget(small_sub, 0, 3, 1, 1);
@@ -225,11 +229,13 @@ XYVirtualKeyboard::XYVirtualKeyboard(QWidget *parent)
     layout_small->addWidget(small_num0, 4, 0, 1, 2);
     layout_small->addWidget(small_point, 4, 2, 1, 1);
 
+    smallWidget = new QWidget;
+    layout_small->setContentsMargins(2, 2, 2, 2);
+    smallWidget->setLayout(layout_small);
     QHBoxLayout *main = new QHBoxLayout(this);
     main->setContentsMargins(5, 5, 5, 5);
-    main->addLayout(layout_main);
-    main->addSpacing(20);
-    main->addLayout(layout_small);
+    main->addWidget(mainWidget);
+    main->addWidget(smallWidget);
 }
 
 XYVirtualKeyboard *XYVirtualKeyboard::getInstance()
@@ -254,6 +260,30 @@ void XYVirtualKeyboard::enlarge()
 void XYVirtualKeyboard::shrink()
 {
     resize(size() - QSize(10, 10));
+}
+
+void XYVirtualKeyboard::show()
+{
+    smallWidget->setVisible(true);
+    mainWidget->setVisible(true);
+    QWidget::show();
+}
+
+void XYVirtualKeyboard::showMain()
+{
+    smallWidget->setVisible(false);
+    mainWidget->setVisible(true);
+    smallNumLockBtn->disconnect();
+    QWidget::show();
+}
+
+void XYVirtualKeyboard::showSmall()
+{
+    mainWidget->setVisible(false);
+    smallWidget->setVisible(true);
+    smallNumLockBtn->disconnect();
+    connect(smallNumLockBtn, SIGNAL(clicked()), this, SLOT(close()));
+    QWidget::show();
 }
 
 bool XYVirtualKeyboard::eventFilter(QObject *obj, QEvent *event)
