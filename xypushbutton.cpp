@@ -76,19 +76,19 @@ void XYPushButton::resizeEvent(QResizeEvent *event)
 void XYPushButton::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
-    painter.drawRect(rect() - QMargins(0, 0, 1, 1));
+    painter.drawRect(rect().x(), rect().y(), rect().width() - 1, rect().height() - 1);
     if (generalKey == Qt::Key_Menu)
     {
         QBrush brush = painter.brush();
         painter.setBrush(QColor(0xb2, 0x50, 0x50));
-        painter.drawRect(rect() - QMargins(0, 0, 1, 1));
+        painter.drawRect(rect().x(), rect().y(), rect().width() - 1, rect().height() - 1);
         painter.setBrush(brush);
     }
     if (pressed || checked)
     {
         QBrush brush = painter.brush();
         painter.setBrush(QColor(77, 0xff, 0xff, 0xff));
-        painter.drawRect(rect() - QMargins(0, 0, 1, 1));
+        painter.drawRect(rect().x(), rect().y(), rect().width() - 1, rect().height() - 1);
         painter.setBrush(brush);
     }
     QLabel::paintEvent(event);

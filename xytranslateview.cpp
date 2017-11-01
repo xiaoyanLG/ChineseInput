@@ -161,8 +161,8 @@ void XYTranslateView::stickItem()
             item->msExtra = QString::number(item->msTranslate.size());
             item->mbStick = true;
             item->miTimes = lastStickItem->miTimes + 1;
-            XYDB->insertData(item, "userPingying");
-            XYDB->insertData(lastStickItem, "userPingying");
+            XYDB->insertData(item, "userPinyin");
+            XYDB->insertData(lastStickItem, "userPinyin");
         }
         miCurrentPage = 0;
         update();

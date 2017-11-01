@@ -68,9 +68,9 @@ bool XYDatabaseOperation::createInputTable()
     QSqlQuery query(QSqlDatabase::database("XYInput"));
 
     // 单字表
-    bool ok = query.exec("CREATE TABLE IF NOT EXISTS  singlePingying ("
+    bool ok = query.exec("CREATE TABLE IF NOT EXISTS  singlePinyin ("
                          "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                         "pingying VARCHAR NOT NULL,"
+                         "pinyin VARCHAR NOT NULL,"
                          "chinese VARCHAR NOT NULL,"
                          "extra VARCHAR NULL,"
                          "times INTEGER NOT NULL,"
@@ -84,9 +84,9 @@ bool XYDatabaseOperation::createInputTable()
     // 基础表
     for (int i = 'A'; i <= 'Z'; ++i)
     {
-        ok = query.exec(QString("CREATE TABLE IF NOT EXISTS  basePintying_%1 ("
+        ok = query.exec(QString("CREATE TABLE IF NOT EXISTS  basePinyin_%1 ("
                         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                        "pingying VARCHAR NOT NULL,"
+                        "pinyin VARCHAR NOT NULL,"
                         "chinese VARCHAR NOT NULL,"
                         "extra VARCHAR NULL,"
                         "times INTEGER NOT NULL,"
@@ -99,9 +99,9 @@ bool XYDatabaseOperation::createInputTable()
     }
 
     // 用户表
-    ok = query.exec("CREATE TABLE IF NOT EXISTS  userPingying ("
+    ok = query.exec("CREATE TABLE IF NOT EXISTS  userPinyin ("
                     "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                    "pingying VARCHAR NOT NULL,"
+                    "pinyin VARCHAR NOT NULL,"
                     "chinese VARCHAR NOT NULL,"
                     "extra VARCHAR NULL,"
                     "times INTEGER NOT NULL,"
@@ -152,7 +152,7 @@ bool XYDatabaseOperation::insertData(XYTranslateItem *item, const QString &table
     }
     else
     {
-        field1 = "pingying";
+        field1 = "pinyin";
         field2 = "chinese";
     }
 
@@ -226,7 +226,7 @@ bool XYDatabaseOperation::insertData(const QList<XYTranslateItem *> &list, const
     }
     else
     {
-        field1 = "pingying";
+        field1 = "pinyin";
         field2 = "chinese";
     }
     QSqlDatabase::database("XYInput").transaction();   //开始一个事务
@@ -267,9 +267,9 @@ bool XYDatabaseOperation::insertData(const QList<XYTranslateItem *> &list, const
 bool XYDatabaseOperation::delItem(XYTranslateItem *item)
 {
     QSqlQuery query(QSqlDatabase::database("XYInput"));
-    if (item->msSource == "singlePingying") // 理论上基础的几个表内容都不能删除，这里只不准删除单字的表
+    if (item->msSource == "singlePinyin") // 理论上基础的几个表内容都不能删除，这里只不准删除单字的表
     {
-        qDebug("Can't delete item in singlePingying!");
+        qDebug("Can't delete item in singlePinyin!");
         return false;
     }
     bool ok = query.exec(QString("DELETE FROM %1 WHERE id = %2;")
@@ -300,7 +300,7 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
     }
 
     QString table_fact = table;
-    if (table_fact == "basePintying" && !key.isEmpty())
+    if (table_fact == "basePinyin" && !key.isEmpty())
     {
         if (!key.at(0).isLetter() || number.toInt() > 6) // 如果都不以字母开头或者超过6个字查找，肯定找不到，直接返回
         {
@@ -324,20 +324,20 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
     }
     else
     {
-        field1 = "pingying";
+        field1 = "pinyin";
         field2 = "chinese";
     }
     QSqlQuery query(QSqlDatabase::database("XYInput"));
     bool ok = query.exec(QString("SELECT id, %1, %2, extra, times, stick FROM %3 "
-                       "WHERE %4 like \"%5\" AND extra like \"%6\" "
-                       "ORDER BY times DESC LIMIT 0,%7;")
-               .arg(field1)
-               .arg(field2)
-               .arg(table_fact)
-               .arg(field1)
-               .arg(key)
-               .arg(number)
-               .arg(max));
+                                 "WHERE %4 like \"%5\" AND extra like \"%6\" "
+                                 "ORDER BY times DESC LIMIT 0,%7;")
+                         .arg(field1)
+                         .arg(field2)
+                         .arg(table_fact)
+                         .arg(field1)
+                         .arg(key)
+                         .arg(number)
+                         .arg(max));
 
     if (!ok)
     {
@@ -347,9 +347,9 @@ QList<XYTranslateItem *> XYDatabaseOperation::findData(const QString &key, const
     while (query.next())
     {
         list.append(new XYTranslateItem(table_fact,
-                                        query.value(2).toString(),
-                                        query.value(1).toString(),
-                                        query.value(3).toString(),
+                                        query.value(2).toString().trimmed(),
+                                        query.value(1).toString().trimmed(),
+                                        query.value(3).toString().trimmed(),
                                         query.value(0).toInt(),
                                         query.value(4).toInt(),
                                         query.value(5).toBool()));

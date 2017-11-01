@@ -148,16 +148,16 @@ XYVirtualKeyboard::XYVirtualKeyboard(QWidget *parent)
 
     XYPushButton *main_ctrlL = new XYPushButton("Ctrl", Qt::Key_Control);
     main_ctrlL->setCheckable(true);
-    XYPushButton *main_sysL = new XYPushButton(QStringLiteral("缩小"), Qt::Key_Meta);
+    XYPushButton *main_sysL = new XYPushButton(QString::fromStdWString(L"缩小"), Qt::Key_Meta);
     connect(main_sysL, SIGNAL(clicked()), this, SLOT(shrink()));
     XYPushButton *main_altL = new XYPushButton("Alt", Qt::Key_Alt);
     main_altL->setCheckable(true);
     XYPushButton *main_space = new XYPushButton(" ", Qt::Key_Space);
     XYPushButton *main_altR = new XYPushButton("Alt", Qt::Key_Alt);
     main_altR->setCheckable(true);
-    XYPushButton *main_sysR = new XYPushButton(QStringLiteral("放大"), Qt::Key_Meta);
+    XYPushButton *main_sysR = new XYPushButton(QString::fromStdWString(L"放大"), Qt::Key_Meta);
     connect(main_sysR, SIGNAL(clicked()), this, SLOT(enlarge()));
-    XYPushButton *main_rect = new XYPushButton(QStringLiteral("关闭"), Qt::Key_Menu);
+    XYPushButton *main_rect = new XYPushButton(QString::fromStdWString(L"关闭"), Qt::Key_Menu);
     connect(main_rect, SIGNAL(clicked()), this, SLOT(close()));
     XYPushButton *main_ctrlR= new XYPushButton("Ctrl", Qt::Key_Control);
     main_ctrlR->setCheckable(true);

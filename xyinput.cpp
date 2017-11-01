@@ -344,6 +344,7 @@ void XYInput::mslotFindTranslate(const QString &keyword)
             find_new = true;
             list = XYDB->findData(splitePY + "%", "", "userEnglishTable");
             list += XYDB->findData(splitePY + "%", "", "englishTable");
+            deDuplication(list, true);
         }
     }
     else
@@ -410,7 +411,7 @@ void XYInput::completeInput(const QString &text, XYTranslateItem *item)
                 }
 
                 moCompleteItem.msExtra = QString::number(moCompleteItem.msTranslate.size());
-                XYDB->insertData(&moCompleteItem, "userPingying");
+                XYDB->insertData(&moCompleteItem, "userPinyin");
                 qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
                                                                Qt::Key_unknown,
                                                                Qt::NoModifier,
@@ -425,6 +426,13 @@ void XYInput::completeInput(const QString &text, XYTranslateItem *item)
                                                            Qt::NoModifier,
                                                            text));
             saveItem(item);
+            if (mbEnglish && item == NULL)
+            {
+                XYTranslateItem *temp = new XYTranslateItem;
+                temp->msComplete = text;
+                XYDB->insertData(temp, "userEnglishTable");
+                delete temp;
+            }
             emit complete(text);
         }
     }
@@ -700,10 +708,10 @@ QList<XYTranslateItem *> XYInput::findPossibleMust(const QString &keyword, int m
         if (!find)
         {
             bool haveFind = false;
-            list = XYDB->findData(key + "%", QString::number(i + 1), "userPingying", &haveFind, max);
+            list = XYDB->findData(key + "%", QString::number(i + 1), "userPinyin", &haveFind, max);
             if (i == 0)
             {
-                QList<XYTranslateItem *> single = XYDB->findData(key + "%", "", "singlePingying", &haveFind, max);
+                QList<XYTranslateItem *> single = XYDB->findData(key + "%", "", "singlePinyin", &haveFind, max);
 
                 for (int i = 0; i < single.size(); ++i)
                 {
@@ -715,12 +723,12 @@ QList<XYTranslateItem *> XYInput::findPossibleMust(const QString &keyword, int m
                         {
                             break;
                         }
-                        list.append(new XYTranslateItem("singlePingying", singles.at(j), singleItem->msComplete));
+                        list.append(new XYTranslateItem("singlePinyin", singles.at(j), singleItem->msComplete));
                     }
                 }
                 qDeleteAll(single);
             }
-            list += XYDB->findData(key + "%", QString::number(i + 1), "basePintying", &haveFind, max);
+            list += XYDB->findData(key + "%", QString::number(i + 1), "basePinyin", &haveFind, max);
 
             deDuplication(list, true);
             if (haveFind)
@@ -759,7 +767,7 @@ void XYInput::saveItem(XYTranslateItem *item)
         else
         {
             item->msExtra = QString::number(item->msTranslate.size());
-            XYDB->insertData(item, "userPingying");
+            XYDB->insertData(item, "userPinyin");
         }
     }
 }
