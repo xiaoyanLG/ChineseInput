@@ -165,7 +165,7 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
         // 如果想屏蔽，直接返回true
         // return true;
     }
-    else if (QEvent::FocusOut == event->type())
+    else if (QEvent::FocusOut == event->type() && !this->isActiveWindow())
     {
         XYInput *input = XYInput::getInstance();
         input->close();

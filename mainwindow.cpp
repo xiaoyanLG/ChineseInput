@@ -11,8 +11,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     QDir::setCurrent(qApp->applicationDirPath());
-//    XYInput::getInstance()->initInputBase("I:/QtProject/ChineseInput/chineseBase/chinese.db");
-    XYInput::getInstance()->initInputBase("chineseBase/chinese.db");
+    if (!XYInput::getInstance()->initInputBase("chineseBase/chinese.db"))
+    {
+        XYInput::getInstance()->initInputBase("../../ChineseInput/chineseBase/chinese.db");
+    }
     ui->textEdit->installEventFilter(XYInput::getInstance());
     ui->lineEdit->installEventFilter(XYInput::getInstance());
 
