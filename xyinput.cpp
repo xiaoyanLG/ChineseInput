@@ -329,14 +329,12 @@ void XYInput::mslotFindTranslate(const QString &keyword)
 
     QList<XYTranslateItem *> list;
     QString splitePY;
-    bool find_new = false;
     if (mbEnglish)
     {
         splitePY = keyword;
         list = findItemsFromTemp(splitePY, false);
         if (list.isEmpty())
         {
-            find_new = true;
             list = XYDB->findData(splitePY + "%", "", "userEnglishTable");
             list += XYDB->findData(splitePY + "%", "", "englishTable");
             deDuplication(list, true);
