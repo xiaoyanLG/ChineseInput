@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -15,8 +15,12 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *event);
+
 private:
     Ui::MainWindow *ui;
+
 };
 
 #endif // MAINWINDOW_H

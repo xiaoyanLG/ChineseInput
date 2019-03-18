@@ -8,12 +8,8 @@ QT       += core gui sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = XYInput
-TEMPLATE = app
-
 DEFINES += QT_KEYPAD_NAVIGATION
-SOURCES += main.cpp\
-        mainwindow.cpp \
+SOURCES += \
     xyinput.cpp \
     xybordershadowwidget.cpp \
     xytranslateitem.cpp \
@@ -22,11 +18,9 @@ SOURCES += main.cpp\
     xymenu.cpp \
     xymenustyle.cpp \
     xytooltips.cpp \
-    xydatabaseoperation.cpp \
-    xyvirtualkeyboard.cpp \
-    xypushbutton.cpp
+    xydatabaseoperation.cpp
 
-HEADERS  += mainwindow.h \
+HEADERS  += \
     xyinput.h \
     xybordershadowwidget.h \
     xytranslateitem.h \
@@ -35,10 +29,34 @@ HEADERS  += mainwindow.h \
     xymenu.h \
     xymenustyle.h \
     xytooltips.h \
-    xydatabaseoperation.h \
-    xyvirtualkeyboard.h \
-    xypushbutton.h
+    xydatabaseoperation.h
 
 FORMS    += mainwindow.ui
 
+sylixos {
+QT += waylandcompositor-private
+DEFINES += XYSYLIXOSINPUTMETHOD_LIBRARY
+TEMPLATE = lib
+
+SOURCES += \
+    xysylixosxyinputmethod.cpp
+
+HEADERS += \
+    xysylixosxyinputmethod.h \
+    xysylixosxyinputmethod_global.h
+
+} else {
+TARGET = XYInput
+TEMPLATE = app
+
+SOURCES +=  main.cpp\
+        mainwindow.cpp
+
+HEADERS +=  \
+    mainwindow.h
+}
+
 QMAKE_CXXFLAGS += -std=c++11
+
+RESOURCES += \
+    images/images.qrc

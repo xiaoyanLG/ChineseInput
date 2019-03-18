@@ -1,8 +1,8 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "xyinput.h"
-#include "xyvirtualkeyboard.h"
 #include <QApplication>
+#include <QKeyEvent>
 #include <QDir>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -15,14 +15,45 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         XYInput::getInstance()->initInputBase("../../ChineseInput/chineseBase/chinese.db");
     }
-    ui->textEdit->installEventFilter(XYInput::getInstance());
-    ui->lineEdit->installEventFilter(XYInput::getInstance());
+    ui->textEdit->installEventFilter(this);
+    ui->lineEdit->installEventFilter(this);
 
-    XYVirtualKeyboard *bo = XYVirtualKeyboard::getInstance();
-    bo->show();
+    connect(XYInput::getInstance(), &XYInput::send_preedit, this, [](const QString &text){
+        if (qApp->focusWidget()) {
+            QList<QInputMethodEvent::Attribute> abs;
+            abs << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0,  0, QVariant());
+            QInputMethodEvent event(text, abs);
+            qApp->sendEvent(qApp->focusWidget(), &event);
+        }
+    });
+    connect(XYInput::getInstance(), &XYInput::send_commit, this, [](const QString &text){
+        if (qApp->focusWidget()) {
+            QInputMethodEvent event;
+            event.setCommitString(text);
+            qApp->sendEvent(qApp->focusWidget(), &event);
+        }
+    });
+    connect(XYInput::getInstance(), &XYInput::send_keyEvent, this, [](QKeyEvent *keyevent){
+        if (qApp->focusWidget()) {
+            qApp->postEvent(qApp->focusWidget(), new QKeyEvent(*keyevent));
+        }
+    });
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->spontaneous() &&
+            (event->type() == QEvent::KeyPress
+            || event->type() == QEvent::KeyRelease))
+    {
+        XYInput::getInstance()->keyEvent(static_cast<QKeyEvent *>(event));
+        return true;
+    }
+
+    return QMainWindow::eventFilter(obj, event);
 }

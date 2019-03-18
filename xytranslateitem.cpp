@@ -5,7 +5,7 @@ XYTranslateItem::XYTranslateItem(const QString &source,
                                  const QString &complete,
                                  const QString &extra,
                                  int id,
-                                 int   times,
+                                 int times,
                                  bool stick)
     : msSource(source),
       msTranslate(translate),

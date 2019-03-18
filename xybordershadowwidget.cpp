@@ -25,11 +25,13 @@ void XYBorderShadowWidget::paintEvent(QPaintEvent *event)
 {
     QPainterPath path;
     path.setFillRule(Qt::WindingFill);
-    path.addRect(10, 10, this->width()-20, this->height()-20);
+    path.addRect(10, 10, this->width() - 20, this->height() - 20);
 
     QPainter painter(this);
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
     painter.setRenderHint(QPainter::Antialiasing, true);
-    painter.fillPath(path, QBrush(Qt::white));
+    painter.fillRect(rect(), QColor(0x00, 0x00, 0x00, 0x00));
+    painter.fillPath(path, QColor(Qt::white));
 
     QColor color(0,0,0,0);
     for (int i=0; i<10; i++)

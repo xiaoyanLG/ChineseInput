@@ -14,15 +14,19 @@ public:
     explicit XYInput(QWidget *parent = 0);
     bool initInputBase(const QString &path);
     ~XYInput();
+    void setScreen(QScreen *screen);
 
 signals:
-    void complete(const QString &out);
+    void send_keyEvent(QKeyEvent *event);
+    void send_preedit(const QString &text); // send preedit string to input area
+    void send_commit(const QString &text);  // send commit string to input area
 
 public slots:
     void setEnglish(bool english);
     void showMoreInfo();
     bool close();
     void show();
+    void keyEvent(QKeyEvent *keyEvent);
 
 private slots:
     void mslotFindTranslate(const QString &keyword); // 查找输入内容对应的词（中英文都通过这个接口）
@@ -45,7 +49,6 @@ private:
 
 private:
     static XYInput  *mopInstance;
-    QWidget         *mopLatestWidget;
     QLineEdit       *mopLineEdit;
     bool             mbEnglish;
 

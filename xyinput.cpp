@@ -6,6 +6,7 @@
 #include <QKeyEvent>
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QWindow>
 #include <QDebug>
 
 XYInput *XYInput::mopInstance;
@@ -37,8 +38,12 @@ XYInput::XYInput(QWidget *parent)
     mopLineEdit = new QLineEdit;
     mopLineEdit->installEventFilter(this);
     layout->addWidget(mopLineEdit);
-    connect(mopLineEdit, SIGNAL(textEdited(const QString &)), this, SLOT(mslotFindTranslate(const QString &)));
-
+    connect(mopLineEdit, &QLineEdit::textEdited, this, &XYInput::mslotFindTranslate);
+    connect(mopLineEdit, &QLineEdit::textChanged, this, [this](const QString &text){
+        if (!text.isEmpty()) {
+            emit this->send_preedit(text);
+        }
+    });
     setLayout(layout);
 }
 
@@ -52,123 +57,113 @@ XYInput::~XYInput()
     delete mopTransLateView;
 }
 
+void XYInput::setScreen(QScreen *screen)
+{
+    if (!windowHandle()) {
+        setVisible(true);
+        setVisible(false);
+    }
+    if (windowHandle()->screen() != screen) {
+        windowHandle()->setScreen(screen);
+    }
+
+    if (!mopTransLateView->windowHandle()) {
+        mopTransLateView->setVisible(true);
+        mopTransLateView->setVisible(false);
+    }
+    if (mopTransLateView->windowHandle()->screen() != screen) {
+        mopTransLateView->windowHandle()->setScreen(screen);
+    }
+}
+
 bool XYInput::eventFilter(QObject *obj, QEvent *event)
 {
-    if (event->type() == QEvent::KeyPress && obj->isWidgetType())
+    if (event->type() == QEvent::KeyPress)
     {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
         if (obj == mopLineEdit)
         {
-            switch (keyEvent->key())
+            if (keyEvent->key() >= Qt::Key_A && keyEvent->key() <= Qt::Key_Z)
             {
-            case Qt::Key_Return:
-            case Qt::Key_Enter:
-                completeInput(mopLineEdit->text());
-                break;
-            case Qt::Key_Equal:
-                mopTransLateView->nextPage();
-                return true;
-            case Qt::Key_Minus:
-                mopTransLateView->prePage();
-                return true;
-            case Qt::Key_Shift:
-                clearTemp();
-                setEnglish(!mbEnglish);
-                mslotFindTranslate(mopLineEdit->text());
-                return true;
-            case Qt::Key_Tab:
-                showMoreInfo();
-                load();
-                return true;
-            case Qt::Key_Space:
-                completeInput(mopTransLateView->getData(1), mopTransLateView->getItem(1));
-                return true;
-            case Qt::Key_Backspace:
-                if (!moCompleteItem.msComplete.isEmpty())
-                {
-                    moCompleteItem.clear();
+                // 在输入字母的时候显示
+                if (!isVisible()) {
+                    show();
                 }
-                msCurrentKeyWords = msCurrentKeyWords.replace("%\'", "");
-                msCurrentKeyWords.remove(msCurrentKeyWords.size() - 1, 1);
-                mopLineEdit->setText(msCurrentKeyWords);
-                mslotFindTranslate(msCurrentKeyWords);
-                return true;
-            default:
-                if (keyEvent->key() >= Qt::Key_0 && keyEvent->key() <= Qt::Key_9 && keyEvent->modifiers() != Qt::KeypadModifier)
+
+                if (msCurrentKeyWords.split("%\'").size() >= 11) // 最大汉子查询数量
                 {
-                    int index = keyEvent->text().toInt();
-                    if (index > 0 && index <= mopTransLateView->miMaxVisibleItem && mopTransLateView->itemCount() >= index)
-                    {
-                        completeInput(mopTransLateView->getData(index), mopTransLateView->getItem(index));
-                    }
+                    event->accept();
                     return true;
                 }
-                else if (keyEvent->key() >= Qt::Key_A && keyEvent->key() <= Qt::Key_Z)
+                else if (!moCompleteItem.msComplete.isEmpty() && !mbEnglish)
                 {
-                    if (msCurrentKeyWords.split("%\'").size() >= 11) // 最大汉子查询数量
-                    {
-                        event->accept();
-                        return true;
-                    }
-                    else if (!moCompleteItem.msComplete.isEmpty() && !mbEnglish)
-                    {
-                        int num = 0;
-                        msCurrentKeyWords = splitePinyin(msCurrentKeyWords.replace("%\'", "") + keyEvent->text(), num);
-                        XYTranslateItem item;
-                        completeInput(moCompleteItem.msTranslate, &item);
-                        return true;
-                    }
+                    int num = 0;
+                    msCurrentKeyWords = splitePinyin(msCurrentKeyWords.replace("%\'", "") + keyEvent->text(), num);
+                    XYTranslateItem item;
+                    completeInput(moCompleteItem.msTranslate, &item);
+                    return true;
                 }
-                break;
+                else if (mopLineEdit->text().isEmpty() || mbEnglish)
+                {
+                    return false;
+                }
             }
-        }
-        else if (keyEvent->key() != Qt::Key_unknown && keyEvent->modifiers() != Qt::ControlModifier)
-        {
-            mopLatestWidget = static_cast<QWidget *>(obj);
-            XYInput *input = XYInput::getInstance();
-            if (!input->isVisible())
+
+            if (!mopLineEdit->text().isEmpty())
             {
-                if (keyEvent->key() >= Qt::Key_A && keyEvent->key() <= Qt::Key_Z
-                        || keyEvent->key() == Qt::Key_Shift)
+                switch (keyEvent->key())
                 {
-                    input->mopLineEdit->clear();
-                    input->mopTransLateView->clear(false);
-                    if (!keyEvent->text().isEmpty())
-                    {
-                        input->show();
-                    }
-                    qApp->postEvent(input->mopLineEdit, new QKeyEvent(QEvent::KeyPress,
-                                                                      keyEvent->key(),
-                                                                      keyEvent->modifiers(),
-                                                                      keyEvent->text()));
+                case Qt::Key_Return:
+                case Qt::Key_Enter:
+                    completeInput(mopLineEdit->text());
+                    break;
+                case Qt::Key_Equal:
+                    mopTransLateView->nextPage();
                     return true;
+                case Qt::Key_Minus:
+                    mopTransLateView->prePage();
+                    return true;
+                case Qt::Key_Shift:
+                    clearTemp();
+                    setEnglish(!mbEnglish);
+                    mslotFindTranslate(mopLineEdit->text());
+                    return true;
+                case Qt::Key_Tab:
+                    showMoreInfo();
+                    load();
+                    return true;
+                case Qt::Key_Space:
+                    completeInput(mopTransLateView->getData(1), mopTransLateView->getItem(1));
+                    return true;
+                case Qt::Key_Backspace:
+                    if (!moCompleteItem.msComplete.isEmpty())
+                    {
+                        moCompleteItem.clear();
+                    }
+                    msCurrentKeyWords = msCurrentKeyWords.replace("%\'", "");
+                    msCurrentKeyWords.remove(msCurrentKeyWords.size() - 1, 1);
+                    mopLineEdit->setText(msCurrentKeyWords);
+                    mslotFindTranslate(msCurrentKeyWords);
+                    return true;
+                default:
+                    if (keyEvent->key() >= Qt::Key_0 && keyEvent->key() <= Qt::Key_9 && keyEvent->modifiers() != Qt::KeypadModifier)
+                    {
+                        int index = keyEvent->text().toInt();
+                        if (index > 0 && index <= mopTransLateView->miMaxVisibleItem && mopTransLateView->itemCount() >= index)
+                        {
+                            completeInput(mopTransLateView->getData(index), mopTransLateView->getItem(index));
+                        }
+                        return true;
+                    }
+                    break;
                 }
             }
             else
             {
-                qApp->postEvent(input->mopLineEdit, new QKeyEvent(QEvent::KeyPress,
-                                                                  keyEvent->key(),
-                                                                  keyEvent->modifiers(),
-                                                                  keyEvent->text()));
+                emit send_keyEvent(keyEvent);
                 return true;
             }
         }
-    }
-    else if (QEvent::InputMethod == event->type())
-    {
-        // 这里是输入法传入的信号，不过，我们可以不用
-        QInputMethodEvent *me = static_cast<QInputMethodEvent *>(event);
-        if (me->attributes().size() == 1 && me->attributes().at(0).type == 1)
-        {
-            qDebug("Text: %s", me->commitString().toUtf8().data());
-        }
-        // 如果想屏蔽，直接返回true
-        // return true;
-    }
-    else if (QEvent::FocusOut == event->type() && !this->isActiveWindow())
-    {
-        XYInput *input = XYInput::getInstance();
-        input->close();
     }
     return QWidget::eventFilter(obj, event);
 }
@@ -412,19 +407,12 @@ void XYInput::completeInput(const QString &text, XYTranslateItem *item)
 
                 moCompleteItem.msExtra = QString::number(moCompleteItem.msTranslate.size());
                 XYDB->insertData(&moCompleteItem, "userPinyin");
-                qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
-                                                               Qt::Key_unknown,
-                                                               Qt::NoModifier,
-                                                               moCompleteItem.msTranslate));
-                emit complete(moCompleteItem.msTranslate);
+
+                emit send_commit(moCompleteItem.msTranslate);
             }
         }
         else
         {
-            qApp->postEvent(mopLatestWidget, new QKeyEvent(QEvent::KeyPress,
-                                                           Qt::Key_unknown,
-                                                           Qt::NoModifier,
-                                                           text));
             saveItem(item);
             if (mbEnglish && item == NULL)
             {
@@ -433,7 +421,7 @@ void XYInput::completeInput(const QString &text, XYTranslateItem *item)
                 XYDB->insertData(temp, "userEnglishTable");
                 delete temp;
             }
-            emit complete(text);
+            emit send_commit(text);
         }
     }
     close();
@@ -513,6 +501,11 @@ void XYInput::show()
     }
 
     this->move(pos_x, pos_y);
+}
+
+void XYInput::keyEvent(QKeyEvent *keyEvent)
+{
+    qApp->sendEvent(mopLineEdit, keyEvent);
 }
 
 void XYInput::load()
@@ -774,6 +767,11 @@ void XYInput::saveItem(XYTranslateItem *item)
 
 QStringList XYInput::getYunMuByShengMu(const QChar &shenmu)
 {
+    static QMap<QChar, QStringList> Allyunmus;
+    if (Allyunmus.find(shenmu) != Allyunmus.end()) {
+        return Allyunmus[shenmu];
+    }
+
     QStringList yunmu;
     switch (shenmu.toLatin1()) // 单独为每一个声母指定可匹配的韵母
     {
@@ -831,6 +829,7 @@ QStringList XYInput::getYunMuByShengMu(const QChar &shenmu)
         break;
     }
 
+    Allyunmus.insert(shenmu, yunmu);
     return yunmu;
 }
 
