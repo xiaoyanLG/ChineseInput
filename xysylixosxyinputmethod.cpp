@@ -123,9 +123,7 @@ void XYSylixOSXYInputMethod::send_keyEvent(QKeyEvent *event)
 
 void XYSylixOSXYInputMethod::send_preedit(const QString &text)
 {
-    QList<QInputMethodEvent::Attribute> abs;
-    abs << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0,  0, QVariant());
-    QInputMethodEvent event(text, abs);
+    QInputMethodEvent event(text, QList<QInputMethodEvent::Attribute>());
     emit sendInputMethod(&event);
 }
 

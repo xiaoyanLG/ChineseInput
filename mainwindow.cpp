@@ -20,9 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(XYInput::getInstance(), &XYInput::send_preedit, this, [](const QString &text){
         if (qApp->focusWidget()) {
-            QList<QInputMethodEvent::Attribute> abs;
-            abs << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, 0,  0, QVariant());
-            QInputMethodEvent event(text, abs);
+            QInputMethodEvent event(text, QList<QInputMethodEvent::Attribute>());
             qApp->sendEvent(qApp->focusWidget(), &event);
         }
     });

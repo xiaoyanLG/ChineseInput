@@ -40,9 +40,7 @@ XYInput::XYInput(QWidget *parent)
     layout->addWidget(mopLineEdit);
     connect(mopLineEdit, &QLineEdit::textEdited, this, &XYInput::mslotFindTranslate);
     connect(mopLineEdit, &QLineEdit::textChanged, this, [this](const QString &text){
-        if (!text.isEmpty()) {
-            emit this->send_preedit(text);
-        }
+        emit this->send_preedit(text);
     });
     setLayout(layout);
 }
