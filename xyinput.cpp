@@ -39,9 +39,11 @@ XYInput::XYInput(QWidget *parent)
     mopLineEdit->installEventFilter(this);
     layout->addWidget(mopLineEdit);
     connect(mopLineEdit, &QLineEdit::textEdited, this, &XYInput::mslotFindTranslate);
-    connect(mopLineEdit, &QLineEdit::textChanged, this, [this](const QString &text){
-        emit this->send_preedit(text);
-    });
+
+    // 这个接口目前有BUG，暂时不用，不影响输入
+//    connect(mopLineEdit, &QLineEdit::textChanged, this, [this](const QString &text){
+//        emit this->send_preedit(text);
+//    });
     setLayout(layout);
 }
 
