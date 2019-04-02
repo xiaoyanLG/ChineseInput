@@ -150,16 +150,15 @@ void XYTranslateView::stickItem()
             return;
         }
         lastStickItem->mbStick = false;
+        item->mbStick = true;
         if (item->msSource.toLower().contains("english"))
         {
-            item->mbStick = true;
             XYDB->insertData(item, "userEnglishTable");
             XYDB->insertData(lastStickItem, "userEnglishTable");
         }
         else
         {
             item->msExtra = QString::number(item->msTranslate.size());
-            item->mbStick = true;
             item->miTimes = lastStickItem->miTimes + 1;
             XYDB->insertData(item, "userPinyin");
             XYDB->insertData(lastStickItem, "userPinyin");
