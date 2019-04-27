@@ -170,9 +170,9 @@ bool XYInput::eventFilter(QObject *obj, QEvent *event)
 
 QString XYInput::splitePinyin(const QString &pinyin, int &num)
 {
-    QString shenmu = "bpmfdtnlgkhjqxzcsywr";
-    QStringList zcs = QString("z c s").split(" ");
-    QStringList yunmuA = QString("a o e ai ao ou ei er an ang en eng").split(" ");
+    static QString shenmu = "bpmfdtnlgkhjqxzcsywr";
+    static QStringList zcs = QString("z c s").split(" ");
+    static QStringList yunmuA = QString("a o e ai ao ou ei er an ang en eng").split(" ");
 
     QString result;
 
@@ -244,9 +244,10 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
         }
         else
         {
-            if (result.endsWith("g") // 如果是特殊的几个韵母结束的，到这里应该截取下来，重新匹配
+            if ( result.size() > 1 &&
+                    (result.endsWith("g") // 如果是特殊的几个韵母结束的，到这里应该截取下来，重新匹配
                     || result.endsWith("n")
-                    || result.endsWith("r") )
+                    || result.endsWith("r")) )
             {
                 int last_index = result.lastIndexOf("%\'");
                 QString last;
