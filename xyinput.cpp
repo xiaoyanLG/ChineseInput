@@ -210,15 +210,15 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
                 ym++;
             }
 
-            QStringList yunmu = getYunMuByShengMu(pinyin.at(cur_index));
+            const QStringList &yunmus = getYunMuByShengMu(pinyin.at(cur_index));
 
             // 贪心查找 （尽可能长的找到满足的）
             while ( (ym + cur_index) < pinyin.size() )
             {
                 bool find = false;
-                for (int i = 0; i < yunmu.size(); ++i)
+                for (int i = 0; i < yunmus.size(); ++i)
                 {
-                    QString c_py = yunmu.at(i);
+                    QString c_py = yunmus.at(i);
                     if (c_py.startsWith(pinyin.mid(cur_index + 1 + h, ym - h)))
                     {
                         find = true;
@@ -764,7 +764,7 @@ void XYInput::saveItem(XYTranslateItem *item)
     }
 }
 
-QStringList XYInput::getYunMuByShengMu(const QChar &shenmu)
+const QStringList &XYInput::getYunMuByShengMu(const QChar &shenmu)
 {
     static QMap<QChar, QStringList> Allyunmus;
     auto it = Allyunmus.find(shenmu);
@@ -829,7 +829,7 @@ QStringList XYInput::getYunMuByShengMu(const QChar &shenmu)
         break;
     }
 
-    Allyunmus.insert(shenmu, yunmu);
-    return yunmu;
+    it = Allyunmus.insert(shenmu, yunmu);
+    return it.value();
 }
 

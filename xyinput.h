@@ -45,7 +45,7 @@ private:
     void completeInput(const QString &text, XYTranslateItem *item = NULL);
     void clearTemp();
     void saveItem(XYTranslateItem *item);
-    QStringList getYunMuByShengMu(const QChar &shenmu);
+    const QStringList &getYunMuByShengMu(const QChar &shenmu);
 
 private:
     static XYInput  *mopInstance;
