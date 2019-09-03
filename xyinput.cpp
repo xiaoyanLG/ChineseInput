@@ -45,6 +45,7 @@ XYInput::XYInput(QWidget *parent)
 //        emit this->send_preedit(text);
 //    });
     setLayout(layout);
+    adjustSize();
 }
 
 bool XYInput::initInputBase(const QString &path)
