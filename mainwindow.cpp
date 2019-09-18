@@ -18,24 +18,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->textEdit->installEventFilter(this);
     ui->lineEdit->installEventFilter(this);
 
-    connect(XYInput::getInstance(), &XYInput::send_preedit, this, [](const QString &text){
-        if (qApp->focusWidget()) {
-            QInputMethodEvent event(text, QList<QInputMethodEvent::Attribute>());
-            qApp->sendEvent(qApp->focusWidget(), &event);
-        }
-    });
-    connect(XYInput::getInstance(), &XYInput::send_commit, this, [](const QString &text){
-        if (qApp->focusWidget()) {
-            QInputMethodEvent event;
-            event.setCommitString(text);
-            qApp->sendEvent(qApp->focusWidget(), &event);
-        }
-    });
-    connect(XYInput::getInstance(), &XYInput::send_keyEvent, this, [](QKeyEvent *keyevent){
-        if (qApp->focusWidget()) {
-            qApp->postEvent(qApp->focusWidget(), new QKeyEvent(*keyevent));
-        }
-    });
+    connect(XYInput::getInstance(), SIGNAL(send_preedit(QString)),
+            this, SLOT(send_preedit(QString)));
+    connect(XYInput::getInstance(), SIGNAL(send_commit(QString)),
+            this, SLOT(send_commit(QString)));
+    connect(XYInput::getInstance(), SIGNAL(send_keyEvent(QKeyEvent *)),
+            this, SLOT(send_keyEvent(QKeyEvent *)));
 }
 
 MainWindow::~MainWindow()
@@ -54,4 +42,28 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
     }
 
     return QMainWindow::eventFilter(obj, event);
+}
+
+void MainWindow::send_preedit(const QString &str)
+{
+    if (qApp->focusWidget()) {
+        QInputMethodEvent event(str, QList<QInputMethodEvent::Attribute>());
+        qApp->sendEvent(qApp->focusWidget(), &event);
+    }
+}
+
+void MainWindow::send_commit(const QString &str)
+{
+    if (qApp->focusWidget()) {
+        QInputMethodEvent event;
+        event.setCommitString(str);
+        qApp->sendEvent(qApp->focusWidget(), &event);
+    }
+}
+
+void MainWindow::send_keyEvent(QKeyEvent *event)
+{
+    if (qApp->focusWidget()) {
+        qApp->postEvent(qApp->focusWidget(), new QKeyEvent(*event));
+    }
 }

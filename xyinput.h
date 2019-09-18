@@ -5,6 +5,7 @@
 #include "xytranslateview.h"
 #include <QMap>
 
+class QScreen;
 class QLineEdit;
 class XYInput : public XYBorderShadowWidget
 {

@@ -18,6 +18,11 @@ public:
 protected:
     bool eventFilter(QObject *obj, QEvent *event);
 
+private slots:
+    void send_preedit(const QString &str);
+    void send_commit(const QString &str);
+    void send_keyEvent(QKeyEvent *event);
+
 private:
     Ui::MainWindow *ui;
 

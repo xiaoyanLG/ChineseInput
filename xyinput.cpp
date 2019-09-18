@@ -6,8 +6,10 @@
 #include <QKeyEvent>
 #include <QApplication>
 #include <QDesktopWidget>
+
+#if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
 #include <QWindow>
-#include <QDebug>
+#endif
 
 XYInput *XYInput::mopInstance;
 XYInput *XYInput::getInstance()
@@ -38,7 +40,7 @@ XYInput::XYInput(QWidget *parent)
     mopLineEdit = new QLineEdit;
     mopLineEdit->installEventFilter(this);
     layout->addWidget(mopLineEdit);
-    connect(mopLineEdit, &QLineEdit::textEdited, this, &XYInput::mslotFindTranslate);
+    connect(mopLineEdit, SIGNAL(textEdited(const QString &)), this, SLOT(mslotFindTranslate(const QString &)));
 
     // 这个接口目前有BUG，暂时不用，不影响输入
 //    connect(mopLineEdit, &QLineEdit::textChanged, this, [this](const QString &text){
@@ -60,6 +62,7 @@ XYInput::~XYInput()
 
 void XYInput::setScreen(QScreen *screen)
 {
+#if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
     if (!windowHandle()) {
         setVisible(true);
         setVisible(false);
@@ -75,6 +78,7 @@ void XYInput::setScreen(QScreen *screen)
     if (mopTransLateView->windowHandle()->screen() != screen) {
         mopTransLateView->windowHandle()->setScreen(screen);
     }
+#endif
 }
 
 bool XYInput::eventFilter(QObject *obj, QEvent *event)
