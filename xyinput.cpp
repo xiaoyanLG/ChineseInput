@@ -265,7 +265,7 @@ QString XYInput::splitePinyin(const QString &pinyin, int &num)
                     last = result;
                 }
                 last.remove(last.size() - 1, 1);
-                if (getYunMuByShengMu(last.at(0)).contains(last.mid(1))) // 判断截取之后是否是可以组合的拼音
+                if (!last.isEmpty() && getYunMuByShengMu(last.at(0)).contains(last.mid(1))) // 判断截取之后是否是可以组合的拼音
                 {
                     result.remove(result.size() - 1, 1);
                     cur_index -= 1;
